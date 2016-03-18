@@ -1,7 +1,17 @@
-require 'helper'
+#! /usr/bin/env ruby
+# coding: utf-8
 
-class TestGomibako < Test::Unit::TestCase
-  def test_something_for_real
-    flunk "hey buddy, you should probably rename this file and start testing for real"
+require "pp"
+require "helper"
+
+class TC_Gomibako < Test::Unit::TestCase
+  def setup
+    @g00 = Gomibako.new
   end
+
+  def test_throw
+    @g00.throw('tmp/a')
+  end
+
 end
+
