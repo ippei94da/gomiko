@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "gomibako"
   gem.homepage = "http://github.com/ippei94da/gomibako"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{Trashbox in UNIX systems}
+  gem.description = %Q{Trashbox. Temporary stock of unnecessary file and directories.}
   gem.email = "ippei94da@gmail.com"
   gem.authors = ["ippei94da"]
   # dependencies defined in Gemfile

@@ -1,48 +1,70 @@
 #! /usr/bin/env ruby
 # coding: utf-8
 
+require 'fileutils'
+
 #
 #
 #
 class Gomibako
-  DEFAULT_TRASH_DIR = ENV['HOME'] + "/.trash"
 
-  #
-  def initialize(trashdir = DEFAULT_TRASH_DIR)
-    @trashdir = trashdir
+  def initialize(dir: nil, verbose: true)
+    if dir
+      @trashdir = dir
+    else
+      if ENV['UID'] == 0 # this is required for 'su -m'
+        @trashdir ='/root/.trash' 
+      else
+        @trashdir = ENV['HOME'] + "/.trash"
+      end
+    end
+    FileUtils.mkdir_p(@trashdir, :verbose => verbose)
   end
 
-  def throw(paths)
-    pwd = ENV['PWD']
-    time_str = Date.now.strtime('%Y%m%x-%H%M%S')
-
-    renamer = FileRenamer::Commander.new({no: true}, paths)
-
-    renamer.execute do |path|
-      new_name = "#{@trashdir}/#{time_str}/#{path}"
-      new_name
+  #def throw(paths: , time: Time.new, dry_run: false)
+  def throw(paths: , time: Time.new, verbose: true)
+    trash_subdir = @trashdir + time.strftime('/%Y%m%d-%H%M%S')
+    FileUtils.mkdir_p(trash_subdir, :verbose => verbose)
+    paths.each do |path|
+      dst = trash_subdir + File.expand_path(path)
+      dst_dir = File.dirname dst
+      FileUtils.mkdir_p(dst_dir, :verbose => verbose)
+      FileUtils.mv(path, dst_dir + '/', :verbose => verbose)
     end
   end
 
-  def show
-    dirs = Dir.glob(@trashdir).sort
-    dirs.each_with_index do |dir, i|
-      printf("%02d : %s\n", i, dir )
+  #def empty(dry_run: false)
+  def empty(verbose: true)
+    Dir.glob("#{@trashdir}/*").each do |path|
+      FileUtils.rm_rf(path, :verbose => verbose)
     end
   end
 
-  def recover(index)
-    tgt_dir = Dir.glob(@trashdir).sort[index]
-    Dir.glob(tgt_dir).each do |file|
+  def undo(verbose: true)
+    tgt_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
+    Dir.glob("#{tgt_dir}/*").sort.each do |path|
+      graft path
     end
+  end
 
+  #unless [ -d $trashdir ]; then
+  #  /bin/rm $@
+  #fi
+  #unset trashdir dstdir
 
-    dir.sub(@trashdir, ふっきぽいんと) path)
-    
+  #alias cleartrash="/bin/rm -rf ~/.trash/*"
 
+#  def show
+#    dirs = Dir.glob(@trashdir).sort
+#    dirs.each_with_index do |dir, i|
+#      printf("%02d : %s\n", i, dir )
+#    end
+#  end
 
+  private
+
+  def graft(path, root_path)
   end
 
 end
-
 

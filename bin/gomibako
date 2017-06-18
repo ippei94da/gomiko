@@ -1,0 +1,33 @@
+#! /usr/bin/env ruby
+
+require 'thor'
+require 'gomibako'
+require 'pp'
+
+class MyCommand < Thor
+  #def initialize
+  #  @gomibako = Gomibako.new
+  #end
+
+  desc :rm, 'Remove files'
+  #option :dry_run,
+  #  desc: "Dry run, not extcute.",
+  #  type: :boolean,
+  #  default: false
+  def rm(* paths)
+    Gomibako.new.throw(paths: paths)
+  end
+
+  desc :empty, 'Remove files in trash directory'
+  def empty
+    Gomibako.new.empty
+  end
+
+  desc :undo, 'Undo removed files into trash directory'
+  def undo
+    Gomibako.new.undo
+  end
+
+
+end
+MyCommand.start(ARGV)
