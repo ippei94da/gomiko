@@ -2,23 +2,25 @@
 # coding: utf-8
 
 require 'fileutils'
+require 'pathname'
 
 #
 #
 #
 class Gomibako
 
-  def initialize(dir: nil, verbose: true)
+  def initialize(dir: nil, root_dir: '/', verbose: true)
     if dir
       @trashdir = dir
     else
-      if ENV['UID'] == 0 # this is required for 'su -m'
+      if ENV['UID'] == 0 # this is needed for 'su -m'
         @trashdir ='/root/.trash' 
       else
         @trashdir = ENV['HOME'] + "/.trash"
       end
     end
     FileUtils.mkdir_p(@trashdir, :verbose => verbose)
+    @root_dir = root_dir
   end
 
   #def throw(paths: , time: Time.new, dry_run: false)
@@ -43,8 +45,12 @@ class Gomibako
   def undo(verbose: true)
     tgt_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
     Dir.glob("#{tgt_dir}/*").sort.each do |path|
-      graft path
+      graft(path, '/')
     end
+
+    最後が空ディレクトリのとき
+    既にファイルがあるとき
+    残骸を rmdir -p
   end
 
   #unless [ -d $trashdir ]; then
@@ -64,6 +70,13 @@ class Gomibako
   private
 
   def graft(path, root_path)
+    path = Pathname.new(path)
+    root_path = Pathname.new(root_path)
+
+
+
+
+
   end
 
 end

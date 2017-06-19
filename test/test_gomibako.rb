@@ -30,7 +30,8 @@ class TC_Gomibako < Test::Unit::TestCase
     a_relpath = 'test/gomibako/a.txt'
     a_fullpath = File.expand_path 'test/gomibako/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
-    File.open(a_relpath, 'w')
+    #File.open(a_relpath, 'w')
+    FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
     assert_false(FileTest.exist? a_relpath)
@@ -41,7 +42,8 @@ class TC_Gomibako < Test::Unit::TestCase
     a_fullpath = File.expand_path 'test/gomibako/b/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
     FileUtils.mkdir_p 'test/gomibako/b'
-    File.open(a_relpath, 'w')
+    #File.open(a_relpath, 'w')
+    FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
     assert_false(FileTest.exist? a_relpath)
@@ -51,7 +53,8 @@ class TC_Gomibako < Test::Unit::TestCase
   def test_empty
     a_relpath = 'test/gomibako/a.txt'
     a_fullpath = File.expand_path 'test/gomibako/a.txt'
-    File.open(a_relpath, 'w')
+    #File.open(a_relpath, 'w')
+    FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
 
     assert(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
@@ -62,11 +65,13 @@ class TC_Gomibako < Test::Unit::TestCase
   def test_undo
     a_relpath = 'test/gomibako/a.txt'
     a_fullpath = File.expand_path 'test/gomibako/a.txt'
-    File.open(a_relpath, 'w')
+    #File.open(a_relpath, 'w')
+    FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     b_relpath = 'test/gomibako/b.txt'
     b_fullpath = File.expand_path 'test/gomibako/b.txt'
-    File.open(b_relpath, 'w')
+    #File.open(b_relpath, 'w')
+    FileUtils.touch b_relpath
     @g00.throw(paths: [b_relpath], time: Time.new(2017, 1, 23, 12, 34, 57), verbose: false)
 
     assert(File.exist? "#{TRASHDIR}/20170123-123457#{b_fullpath}")
@@ -76,7 +81,13 @@ class TC_Gomibako < Test::Unit::TestCase
   end
 
   def test_graft
-    @g00.graft()
+    FileUtils.rm_rf('test/gomibako/graft/a')
+    FileUtils.rm_rf('test/gomibako/graft/A')
+    FileUtils.mkdir_p('test/gomibako/graft/a/b/c/')
+    FileUtils.touch('test/gomibako/graft/a/b/c/d.txt')
+    FileUtils.mkdir_p('test/gomibako/graft/A/a/b')
+
+    @g00.graft('test/gomibako/graft/a/b/c/', 'test/gomibako/graft/A/')
   end
 
 end
