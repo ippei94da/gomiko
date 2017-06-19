@@ -45,12 +45,17 @@ class Gomibako
   def undo(verbose: true)
     tgt_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
     Dir.glob("#{tgt_dir}/*").sort.each do |path|
-      graft(path, '/')
+      pp @root_dir + path
+      exit
+      graft(@root_dir + path, '/')
+      #command = "rsync -a #{path} /"
+      #rsync は良いアイデアだが、パーミッションがないところをルートにしてマージできない。
     end
+    puts "rm -rf #{tgt_dir}"
 
-    最後が空ディレクトリのとき
-    既にファイルがあるとき
-    残骸を rmdir -p
+    #最後が空ディレクトリのとき
+    #既にファイルがあるとき
+    #残骸を rmdir -p
   end
 
   #unless [ -d $trashdir ]; then
@@ -67,16 +72,13 @@ class Gomibako
 #    end
 #  end
 
-  private
+  #private
 
-  def graft(path, root_path)
-    path = Pathname.new(path)
+  def graft(root_path, rel_path)
     root_path = Pathname.new(root_path)
-
-
-
-
-
+    rel_path = Pathname.new(rel_path)
+    #pp root_path
+    #pp rel_path
   end
 
 end
