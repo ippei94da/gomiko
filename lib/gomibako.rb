@@ -45,10 +45,8 @@ class Gomibako
   def undo(verbose: true)
     tgt_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
     Dir.glob("#{tgt_dir}/*").sort.each do |path|
-      pp @root_dir + path
-      exit
-      graft(@root_dir + path, '/')
-      #command = "rsync -a #{path} /"
+      rel_path = path.sub(tgt_dir, '')
+      graft(@root_dir + tgt_dir, '/')
       #rsync は良いアイデアだが、パーミッションがないところをルートにしてマージできない。
     end
     puts "rm -rf #{tgt_dir}"
@@ -74,11 +72,22 @@ class Gomibako
 
   #private
 
-  def graft(root_path, rel_path)
-    root_path = Pathname.new(root_path)
-    rel_path = Pathname.new(rel_path)
-    #pp root_path
-    #pp rel_path
+  # e.g., root_path = ~/.trash/20170123-012345
+  #       path      = home/ippei/foo
+  def graft(src_root, path)
+    src_root = Pathname.new(src_root)
+    path     = Pathname.new(path)
+    tgt_path = '/' + path
+
+    if FileTest.directory? (tgt_path)
+      TODO
+      graft ...
+    elsif FileTest.exist? (tgt_path)
+      puts "normal file already exist: #{tgt_path}"
+      return
+    else
+      FileUtils.mv(src_root + path, tgt_path )
+    end
   end
 
 end
