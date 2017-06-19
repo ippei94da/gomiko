@@ -77,17 +77,19 @@ class Gomibako
   def graft(src_root, path)
     src_root = Pathname.new(src_root)
     path     = Pathname.new(path)
-    tgt_path = '/' + path
+    tgt_path = Pathname.new('/') + path
 
     if FileTest.directory? (tgt_path)
-      TODO
-      graft ...
+      Dir.glob("#{tgt_path}/*") do |subdir|
+        next_path = src_root + subdir
+        graft(src_root, subdir)
+      end
     elsif FileTest.exist? (tgt_path)
       puts "normal file already exist: #{tgt_path}"
-      return
     else
-      FileUtils.mv(src_root + path, tgt_path )
+      FileUtils.mv(src_root + path, tgt_path, :noop => true, :verbose => true )
     end
+    return
   end
 
 end
