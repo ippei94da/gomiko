@@ -35,11 +35,13 @@ class Gomibako
     end
 
     trash_subdir = @trashdir + time.strftime('/%Y%m%d-%H%M%S')
-    FileUtils.mkdir_p(trash_subdir, :verbose => verbose)
+    #FileUtils.mkdir_p(trash_subdir, :verbose => verbose)
+    FileUtils.mkdir_p(trash_subdir)
     paths.each do |path|
       dst = trash_subdir + File.expand_path(path)
       dst_dir = File.dirname dst
-      FileUtils.mkdir_p(dst_dir, :verbose => verbose)
+      #FileUtils.mkdir_p(dst_dir, :verbose => verbose)
+      FileUtils.mkdir_p(dst_dir)
       FileUtils.mv(path, dst_dir + '/', :verbose => verbose)
     end
   end
@@ -52,17 +54,22 @@ class Gomibako
   end
 
   def undo(verbose: true, dst_root: '/')
-    dst_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
-    Dir.glob("#{dst_dir}/*").sort.each do |path|
-      #rel_path = path.sub(dst_dir, '')
-      #puts
-      #pp dst_dir
-      #pp ''
-      #exit
-      graft(dst_dir, '', dst_root: dst_root)
-      #rsync は良いアイデアだが、パーミッションがないところをルートにしてマージできない。
+    if Dir.glob("#{@trashdir}/*").empty?
+      puts "Nothing to undo in #{@trashdir}"
+      exit
     end
-    FileUtils.rm_rf dst_dir # slightly risky?
+    dst_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
+
+    begin
+      Dir.glob("#{dst_dir}/*").sort.each do |path|
+        #rsync might be an idea.
+        #but it has a problem that it cannot merge to thepath without permission.
+        graft(dst_dir, '', dst_root: dst_root)
+      end
+      FileUtils.rm_rf dst_dir # risky?
+    rescue
+      puts "Cannot undo: #{dst_dir}"
+    end
   end
 
   private

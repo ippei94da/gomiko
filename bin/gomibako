@@ -9,7 +9,7 @@ class MyCommand < Thor
   #  @gomibako = Gomibako.new
   #end
 
-  desc :rm, 'Remove files'
+  desc :rm, 'Throw files into trash directory'
   #option :dry_run,
   #  desc: "Dry run, not extcute.",
   #  type: :boolean,
@@ -23,7 +23,7 @@ class MyCommand < Thor
     Gomibako.new.empty
   end
 
-  desc :undo, 'Undo removed files into trash directory'
+  desc :undo, 'Undo removed files from trash directory'
   def undo
     Gomibako.new.undo
   end
