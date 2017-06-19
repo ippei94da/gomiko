@@ -76,6 +76,7 @@ class TC_Gomibako < Test::Unit::TestCase
   end
 
   def test_graft
+    @g00.graft()
   end
 
 end
