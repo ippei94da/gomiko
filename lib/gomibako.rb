@@ -9,7 +9,9 @@ require 'pathname'
 #
 class Gomibako
 
-  def initialize(dir: nil, root_dir: '/', verbose: true)
+  #def initialize(dir: nil, root_dir: '/', verbose: true)
+  def initialize(dir: nil, verbose: true)
+  #def initialize(dir: nil)
     if dir
       @trashdir = dir
     else
@@ -19,12 +21,19 @@ class Gomibako
         @trashdir = ENV['HOME'] + "/.trash"
       end
     end
-    FileUtils.mkdir_p(@trashdir, :verbose => verbose)
-    @root_dir = root_dir
+    #FileUtils.mkdir_p(@trashdir, :verbose => verbose)
+    FileUtils.mkdir_p(@trashdir)
+    #@root_dir = root_dir
   end
 
-  #def throw(paths: , time: Time.new, dry_run: false)
   def throw(paths: , time: Time.new, verbose: true)
+    paths.each do |path|
+      unless FileTest.exist? path
+        puts "gomibako rm: cannot remove '#{path}': No such file or directory" if verbose
+        exit
+      end
+    end
+
     trash_subdir = @trashdir + time.strftime('/%Y%m%d-%H%M%S')
     FileUtils.mkdir_p(trash_subdir, :verbose => verbose)
     paths.each do |path|
@@ -42,52 +51,38 @@ class Gomibako
     end
   end
 
-  def undo(verbose: true)
-    tgt_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
-    Dir.glob("#{tgt_dir}/*").sort.each do |path|
-      rel_path = path.sub(tgt_dir, '')
-      graft(@root_dir + tgt_dir, '/')
+  def undo(verbose: true, dst_root: '/')
+    dst_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
+    Dir.glob("#{dst_dir}/*").sort.each do |path|
+      #rel_path = path.sub(dst_dir, '')
+      #puts
+      #pp dst_dir
+      #pp ''
+      #exit
+      graft(dst_dir, '', dst_root: dst_root)
       #rsync は良いアイデアだが、パーミッションがないところをルートにしてマージできない。
     end
-    puts "rm -rf #{tgt_dir}"
-
-    #最後が空ディレクトリのとき
-    #既にファイルがあるとき
-    #残骸を rmdir -p
+    FileUtils.rm_rf dst_dir # slightly risky?
   end
 
-  #unless [ -d $trashdir ]; then
-  #  /bin/rm $@
-  #fi
-  #unset trashdir dstdir
-
-  #alias cleartrash="/bin/rm -rf ~/.trash/*"
-
-#  def show
-#    dirs = Dir.glob(@trashdir).sort
-#    dirs.each_with_index do |dir, i|
-#      printf("%02d : %s\n", i, dir )
-#    end
-#  end
-
-  #private
+  private
 
   # e.g., root_path = ~/.trash/20170123-012345
   #       path      = home/ippei/foo
-  def graft(src_root, path)
+  def graft(src_root, path, dst_root: '/', verbose: true)
     src_root = Pathname.new(src_root)
     path     = Pathname.new(path)
-    tgt_path = Pathname.new('/') + path
+    dst_path = Pathname.new(dst_root) + path
 
-    if FileTest.directory? (tgt_path)
-      Dir.glob("#{tgt_path}/*") do |subdir|
-        next_path = src_root + subdir
-        graft(src_root, subdir)
+    if FileTest.directory? (dst_path)
+      Dir.glob("#{src_root + path}/*") do |next_path|
+        next_path = Pathname.new(next_path).relative_path_from(src_root)
+        graft(src_root, next_path, dst_root: dst_root, verbose: verbose)
       end
-    elsif FileTest.exist? (tgt_path)
-      puts "normal file already exist: #{tgt_path}"
+    elsif FileTest.exist? (dst_path)
+      puts "normal file already exist: #{dst_path}" if verbose
     else
-      FileUtils.mv(src_root + path, tgt_path, :noop => true, :verbose => true )
+      FileUtils.mv(src_root + path, dst_path, noop: false, verbose: verbose )
     end
     return
   end

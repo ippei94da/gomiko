@@ -4,6 +4,10 @@
 require "pp"
 require "helper"
 
+class Gomibako
+  public :graft
+end
+
 class TC_Gomibako < Test::Unit::TestCase
 
   TRASHDIR = 'test/gomibako/trash'
@@ -42,12 +46,18 @@ class TC_Gomibako < Test::Unit::TestCase
     a_fullpath = File.expand_path 'test/gomibako/b/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
     FileUtils.mkdir_p 'test/gomibako/b'
-    #File.open(a_relpath, 'w')
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
     assert_false(FileTest.exist? a_relpath)
     assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
+
+    # include not exist file
+    #io = StringIO.new
+    @g00.throw(paths: [a_relpath, 'not_exist'],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+    assert(FileTest.exist? (a_relpath))
   end
   
   def test_empty
@@ -62,33 +72,74 @@ class TC_Gomibako < Test::Unit::TestCase
     assert_false(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
   end
 
-  def test_undo
-    a_relpath = 'test/gomibako/a.txt'
-    a_fullpath = File.expand_path 'test/gomibako/a.txt'
-    #File.open(a_relpath, 'w')
-    FileUtils.touch a_relpath
-    @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    b_relpath = 'test/gomibako/b.txt'
-    b_fullpath = File.expand_path 'test/gomibako/b.txt'
-    #File.open(b_relpath, 'w')
-    FileUtils.touch b_relpath
-    @g00.throw(paths: [b_relpath], time: Time.new(2017, 1, 23, 12, 34, 57), verbose: false)
+  #def test_undo
+  #  FileUtils.rm_rf "test/gomibako/undo"
+  #  #a_relpath = 'a/b/c.txt'
+  #  #b_relpath = 'a/b/d.txt'
+  #  #b_fullpath = File.expand_path 'test/gomibako/b.txt'
+  #  FileUtils.touch 'a/b/c.txt'
+  #  FileUtils.touch 'a/b/d.txt'
+  #  @g00.throw(paths: ['a/b/c.txt'], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
+  #  @g00.throw(paths: ['a/b/d.txt'], time: Time.new(2017, 1, 23, 12, 34, 57), verbose: false)
 
-    assert(File.exist? "#{TRASHDIR}/20170123-123457#{b_fullpath}")
-    @g00.undo(verbose: false)
-    assert_false(File.exist? "#{TRASHDIR}/20170123-123457#{b_fullpath}")
-    assert(File.exist? "#{b_fullpath}")
+  #  assert(File.exist? "#{TRASHDIR}/20170123-123456/a/b/c.txt")
+  #  assert(File.exist? "#{TRASHDIR}/20170123-123457/a/b/d.txt")
+  #  @g00.undo(verbose: false, dst_root: "test/gomibako/undo")
+  #  assert      (File.exist? "#{TRASHDIR}/20170123-123457/a/b/c.txt")
+  #  assert_false(File.exist? "#{TRASHDIR}/20170123-123457/a/b/d.txt")
+  #  assert      (File.exist? "test/gomibako/undo/a/b/d.txt")
+  #end
+
+  def test_graft1
+    FileUtils.rm_rf(  'test/gomibako/graft')
+    FileUtils.mkdir_p('test/gomibako/graft/src/a/b/c')
+    FileUtils.touch(  'test/gomibako/graft/src/a/b/c/d.txt')
+    @g00.graft('test/gomibako/graft/src',
+               '',
+               dst_root: "test/gomibako/graft/dst",
+              verbose: false)
+
+    assert(FileTest.directory?('test/gomibako/graft/dst/a/b/c/'))
+    assert(FileTest.file?('test/gomibako/graft/dst/a/b/c/d.txt'))
   end
 
-  def test_graft
-    FileUtils.rm_rf('test/gomibako/graft/a')
-    FileUtils.rm_rf('test/gomibako/graft/A')
-    FileUtils.mkdir_p('test/gomibako/graft/a/b/c/')
-    FileUtils.touch('test/gomibako/graft/a/b/c/d.txt')
-    FileUtils.mkdir_p('test/gomibako/graft/A/a/b')
-
-    @g00.graft('test/gomibako/graft/a/b/c/', 'test/gomibako/graft/A/')
+  def test_graft2
+    FileUtils.rm_rf(  'test/gomibako/graft')
+    FileUtils.mkdir_p('test/gomibako/graft/src/a/b/c')
+    FileUtils.mkdir_p('test/gomibako/graft/dst/a')
+    FileUtils.touch(  'test/gomibako/graft/src/a/b/c/d.txt')
+    #
+    @g00.graft('test/gomibako/graft/src',
+               'a',
+               dst_root: "test/gomibako/graft/dst",
+              verbose: false)
+    assert(FileTest.directory?('test/gomibako/graft/dst/a/b/c/'))
+    assert(FileTest.file?('test/gomibako/graft/dst/a/b/c/d.txt'))
   end
+
+  def test_graft3
+    FileUtils.rm_rf(  'test/gomibako/graft')
+    FileUtils.mkdir_p('test/gomibako/graft/src/a/b/c')
+    FileUtils.mkdir_p('test/gomibako/graft/dst/a/b/c')
+    FileUtils.touch(  'test/gomibako/graft/src/a/b/c/d.txt')
+    #
+    @g00.graft('test/gomibako/graft/src',
+               'a',
+               dst_root: "test/gomibako/graft/dst",
+              verbose: false)
+    assert(FileTest.directory?('test/gomibako/graft/dst/a/b/c/'))
+    assert(FileTest.file?('test/gomibako/graft/dst/a/b/c/d.txt'))
+  end
+
+    #@g00.graft('test/gomibako/graft', 'a')
+    #@g00.graft('test/gomibako/graft', 'a/b')
+    #@g00.graft('test/gomibako/graft', 'a/b/c')
+    #@g00.graft('test/gomibako/graft', 'a/b/c/d.txt')
+  #end
+
+  #undef test_graft1
+  #undef test_graft2
+  #undef test_graft3
 
 end
 
