@@ -3,6 +3,7 @@
 
 require 'fileutils'
 require 'pathname'
+require 'find'
 
 #
 #
@@ -72,6 +73,37 @@ class Gomibako
     rescue
       puts "Cannot undo: #{dst_dir}"
     end
+  end
+
+  def ls()
+    results = []
+    Dir.glob("#{@trashdir}/*").sort.each do |path|
+      tmp = []
+      tmp << path.sub(/^#{@trashdir}\//, '')
+
+      root_mtime = File.mtime path
+      #pp Find.find(path).each do |v| pp v end
+      Find.find(path).each do |path|
+        #pp path
+        #pp root_mtime 
+        #pp File.mtime(path)
+        if root_mtime - File.mtime(path) > 2
+          path.sub(/^#{@trashdir}\//, '')
+          tmp << path
+          break
+        end
+      end
+      pp tmp
+
+      if results.size > 1
+      end
+      #pp results
+
+      path.sub(/^#{@trashdir}\//, '')
+      puts
+      results << tmp
+    end
+    pp results
   end
 
   private
