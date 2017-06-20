@@ -38,8 +38,6 @@ class MyCommand < Thor
     Gomibako.new.ls
   end
 
-
-
 end
 MyCommand.start(ARGV)
 

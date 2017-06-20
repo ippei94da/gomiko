@@ -12,4 +12,6 @@ group :development do
   gem "simplecov", ">= 0"
   gem 'test-unit', '~> 3.2'
   gem 'filerenamer', '~> 0.0'
+  gem "tefil", '~> 0.1.4'
+  gem "builtinextension", '~> 0.1.4'
 end

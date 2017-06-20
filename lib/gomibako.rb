@@ -3,6 +3,7 @@
 
 require 'fileutils'
 require 'pathname'
+require 'tefil'
 require 'find'
 
 #
@@ -10,9 +11,7 @@ require 'find'
 #
 class Gomibako
 
-  #def initialize(dir: nil, root_dir: '/', verbose: true)
   def initialize(dir: nil, verbose: true)
-  #def initialize(dir: nil)
     if dir
       @trashdir = dir
     else
@@ -22,9 +21,7 @@ class Gomibako
         @trashdir = ENV['HOME'] + "/.trash"
       end
     end
-    #FileUtils.mkdir_p(@trashdir, :verbose => verbose)
     FileUtils.mkdir_p(@trashdir)
-    #@root_dir = root_dir
   end
 
   def throw(paths: , time: Time.new, verbose: true)
@@ -36,18 +33,15 @@ class Gomibako
     end
 
     trash_subdir = @trashdir + time.strftime('/%Y%m%d-%H%M%S')
-    #FileUtils.mkdir_p(trash_subdir, :verbose => verbose)
     FileUtils.mkdir_p(trash_subdir)
     paths.each do |path|
       dst = trash_subdir + File.expand_path(path)
       dst_dir = File.dirname dst
-      #FileUtils.mkdir_p(dst_dir, :verbose => verbose)
       FileUtils.mkdir_p(dst_dir)
       FileUtils.mv(path, dst_dir + '/', :verbose => verbose)
     end
   end
 
-  #def empty(dry_run: false)
   def empty(before: 0, time: Time.now, verbose: true)
     Dir.glob("#{@trashdir}/*").each do |path|
       if time -  File.mtime(path) > 86400 * before
@@ -76,34 +70,23 @@ class Gomibako
   end
 
   def ls()
-    results = []
+    results = [['size', '[date-time dir]/path[ ...]']]
     Dir.glob("#{@trashdir}/*").sort.each do |path|
       tmp = []
-      tmp << path.sub(/^#{@trashdir}\//, '')
+      tmp << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
 
-      root_mtime = File.mtime path
-      #pp Find.find(path).each do |v| pp v end
-      Find.find(path).each do |path|
-        #pp path
-        #pp root_mtime 
-        #pp File.mtime(path)
-        if root_mtime - File.mtime(path) > 2
-          path.sub(/^#{@trashdir}\//, '')
-          tmp << path
-          break
-        end
+      not_exist_files = Find.find(path).select do |subpath|
+        fullpath = subpath.sub(/^#{path}/, '')
+        ! FileTest.exist?(fullpath)
       end
-      pp tmp
+      not_exist_files.shift # path for root dir
+      not_exist_files.map! {|v| v.sub(/^#{@trashdir}\//, '')}
+      tmp << not_exist_files[0]
+      tmp[-1] += ' ...' if not_exist_files.size > 2
 
-      if results.size > 1
-      end
-      #pp results
-
-      path.sub(/^#{@trashdir}\//, '')
-      puts
       results << tmp
     end
-    pp results
+    Tefil::ColumnFormer.new.form(results)
   end
 
   private
