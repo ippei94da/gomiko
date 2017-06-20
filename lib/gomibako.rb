@@ -47,9 +47,11 @@ class Gomibako
   end
 
   #def empty(dry_run: false)
-  def empty(verbose: true)
+  def empty(before: 0, time: Time.now, verbose: true)
     Dir.glob("#{@trashdir}/*").each do |path|
-      FileUtils.rm_rf(path, :verbose => verbose)
+      if time -  File.mtime(path) > 86400 * before
+        FileUtils.rm_rf(path, :verbose => verbose)
+      end
     end
   end
 

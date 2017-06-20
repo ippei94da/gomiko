@@ -73,6 +73,27 @@ class TC_Gomibako < Test::Unit::TestCase
     assert_false(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
   end
 
+  def test_empty_before
+    # before option
+    a_relpath = 'test/gomibako_tmp/a.txt'
+    a_fullpath = File.expand_path 'test/gomibako_tmp/a.txt'
+    #File.open(a_relpath, 'w')
+    FileUtils.touch a_relpath
+    @g00.throw(paths: [a_relpath],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+
+    assert(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
+    @g00.empty(before: 5,
+               time: Time.new(2017, 1, 27, 12, 34, 56),
+               verbose: false)
+    assert(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
+    @g00.empty(before: 3,
+               time: Time.new(2017, 1, 27, 12, 34, 56),
+               verbose: false)
+    assert(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
+  end
+
   #def test_undo
   #  FileUtils.rm_rf "test/gomibako_tmp/undo"
   #  #a_relpath = 'a/b/c.txt'

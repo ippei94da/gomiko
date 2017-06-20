@@ -19,8 +19,13 @@ class MyCommand < Thor
   end
 
   desc :empty, 'Remove files in trash directory'
+  option "before", type: :numeric,
+    default: 0
+  option "verbose", type: :boolean,
+    default: true
   def empty
-    Gomibako.new.empty
+    Gomibako.new.empty(before: options[:before],
+                       verbose: options[:verbose])
   end
 
   desc :undo, 'Undo removed files from trash directory'
