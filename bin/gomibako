@@ -31,3 +31,4 @@ class MyCommand < Thor
 
 end
 MyCommand.start(ARGV)
+
