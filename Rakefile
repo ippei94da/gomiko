@@ -14,8 +14,8 @@ require 'rake'
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
-  gem.name = "gomibako"
-  gem.homepage = "http://github.com/ippei94da/gomibako"
+  gem.name = "gomiko"
+  gem.homepage = "http://github.com/ippei94da/gomiko"
   gem.license = "MIT"
   gem.summary = %Q{Trashbox in UNIX systems}
   gem.description = %Q{Trashbox. Temporary stock of unnecessary file and directories.}
@@ -45,7 +45,7 @@ Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
 
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "gomibako #{version}"
+  rdoc.title = "gomiko #{version}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
