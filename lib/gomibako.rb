@@ -69,7 +69,7 @@ class Gomibako
     end
   end
 
-  def ls()
+  def ls
     results = [['size', '[date-time dir]/path[ ...]']]
     Dir.glob("#{@trashdir}/*").sort.each do |path|
       tmp = []
@@ -86,7 +86,11 @@ class Gomibako
 
       results << tmp
     end
-    Tefil::ColumnFormer.new.form(results)
+    if results.size > 1
+      Tefil::ColumnFormer.new.form(results)
+    else
+      puts "Nothing in ~/.trash"
+    end
   end
 
   private
