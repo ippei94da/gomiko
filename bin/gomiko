@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 
 require 'thor'
-require 'gomibako'
+require 'gomiko'
 require 'pp'
 
 class MyCommand < Thor
   #def initialize
-  #  @gomibako = Gomibako.new
+  #  @gomiko = Gomiko.new
   #end
 
   desc :rm, 'Throw files into trash directory'
@@ -15,7 +15,7 @@ class MyCommand < Thor
   #  type: :boolean,
   #  default: false
   def rm(* paths)
-    Gomibako.new.throw(paths: paths)
+    Gomiko.new.throw(paths: paths)
   end
 
   desc :empty, 'Remove files in trash directory'
@@ -24,18 +24,18 @@ class MyCommand < Thor
   option "quiet", type: :boolean,
     default: false
   def empty
-    Gomibako.new.empty(before: options[:before],
+    Gomiko.new.empty(before: options[:before],
                        verbose: ! options[:quiet])
   end
 
   desc :undo, 'Undo removed files from trash directory'
   def undo
-    Gomibako.new.undo
+    Gomiko.new.undo
   end
 
   desc :ls, 'Show trash directory'
   def ls
-    Gomibako.new.ls
+    Gomiko.new.ls
   end
 
 end

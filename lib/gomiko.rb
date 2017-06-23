@@ -9,7 +9,7 @@ require 'find'
 #
 #
 #
-class Gomibako
+class Gomiko
 
   def initialize(dir: nil, verbose: true)
     if dir
@@ -27,13 +27,12 @@ class Gomibako
   def throw(paths: , time: Time.new, verbose: true)
     paths.each do |path|
       unless FileTest.exist? path
-        puts "gomibako rm: cannot remove '#{path}': No such file or directory" if verbose
+        puts "gomiko rm: cannot remove '#{path}': No such file or directory" if verbose
         exit
       end
     end
 
-    trash_subdir = @trashdir + time.strftime('/%Y%m%d-%H%M%S')
-    FileUtils.mkdir_p(trash_subdir)
+    trash_subdir = mkdir_time(time)
     paths.each do |path|
       dst = trash_subdir + File.expand_path(path)
       dst_dir = File.dirname dst
@@ -69,8 +68,9 @@ class Gomibako
     end
   end
 
-  def ls
-    results = [['size', '[date-time dir]/path[ ...]']]
+  # list
+  def ls(io: $stdout)
+    results = [['size', 'date-time-id', 'path[ ...]']]
     Dir.glob("#{@trashdir}/*").sort.each do |path|
       tmp = []
       tmp << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
@@ -83,7 +83,6 @@ class Gomibako
       not_exist_files.map! {|v| v.sub(/^#{@trashdir}\//, '')}
       tmp << not_exist_files[0]
       tmp[-1] += ' ...' if not_exist_files.size > 2
-
       results << tmp
     end
     if results.size > 1
@@ -114,6 +113,29 @@ class Gomibako
     end
     return
   end
+
+  def mkdir_time(time)
+    time_str = time.strftime('/%Y%m%d-%H%M%S')
+    dirname = nil
+
+    i = 0
+    while ! dirname
+
+      begin
+        #self.ls
+        try_name = @trashdir + "#{time_str}"
+        try_name += "-#{i}" if 1 <= i
+        #pp try_name
+        FileUtils.mkdir(try_name)
+        dirname = try_name
+      rescue Errno::EEXIST
+        i += 1
+        next
+      end
+    end
+    dirname
+  end
+
 
 end
 
