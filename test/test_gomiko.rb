@@ -50,7 +50,7 @@ class TC_Gomiko < Test::Unit::TestCase
     FileUtils.mkdir_p 'test/gomiko/b'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    pp "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
+    #pp "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
     assert_false(FileTest.exist? a_relpath)
     assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
@@ -114,7 +114,7 @@ class TC_Gomiko < Test::Unit::TestCase
   #  assert      (File.exist? "test/gomiko/undo/a/b/d.txt")
   #end
 
-  # ls
+  # ls, list
   def test_ls
     io = StringIO.new
     a_relpath = 'test/gomiko/a.txt'
@@ -122,8 +122,21 @@ class TC_Gomiko < Test::Unit::TestCase
     #File.open(a_relpath, 'w')
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    pp @g00.ls
-    #pp @g00.ls(io: io)
+    @g00.ls(io: io)
+    io.rewind
+    results = io.readlines
+    corrects = [
+      "size date-time-id    path[ ...]",
+      "28K  20170123-123456 /home/ippei/git/gomiko/test/gomiko/a.txt",
+    ]
+
+    ##そのあと同じ名前のファイルを作った場合
+    #FileUtils.touch a_relpath
+    #corrects = [
+    #  "size date-time-id    path[ ...]\n",
+    #  "28K  20170123-123456 /home/ippei/git/gomiko/test/gomiko/a.txt (exist)\n",
+    #]
+    #assert_equal(corrects, results)
   end
 
   def test_graft1

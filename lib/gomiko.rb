@@ -37,6 +37,7 @@ class Gomiko
       dst = trash_subdir + File.expand_path(path)
       dst_dir = File.dirname dst
       FileUtils.mkdir_p(dst_dir)
+      
       FileUtils.mv(path, dst_dir + '/', :verbose => verbose)
     end
   end
@@ -56,39 +57,67 @@ class Gomiko
     end
     dst_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
 
-    begin
-      Dir.glob("#{dst_dir}/*").sort.each do |path|
-        #rsync might be an idea.
-        #but it has a problem that it cannot merge to thepath without permission.
-        graft(dst_dir, '', dst_root: dst_root)
-      end
-      FileUtils.rm_rf dst_dir # risky?
-    rescue
+    Dir.glob("#{dst_dir}/*").sort.each do |path|
+      #rsync seems to be an good idea.
+      #but it has a problem that it cannot merge to thepath without permission.
+      graft(dst_dir, '', dst_root: dst_root)
+    end
+
+    if Dir.glob("#{dst_dir}/**/*").find {|path| FileTest.file? path}
       puts "Cannot undo: #{dst_dir}"
+    else
+      FileUtils.rm_rf dst_dir # risky?
     end
   end
 
-  # list
+  # ls, list
   def ls(io: $stdout)
     results = [['size', 'date-time-id', 'path[ ...]']]
     Dir.glob("#{@trashdir}/*").sort.each do |path|
       tmp = []
       tmp << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
 
-      not_exist_files = Find.find(path).select do |subpath|
+      #pp path
+      id = path.sub(/^#{@trashdir}\//, '').split.shift
+      tmp << id
+
+      
+      last_path = ''
+      #not_exist_files = Find.find(path).select do |subpath|
+      #  last_path = subpath
+      #  fullpath = subpath.sub(/^#{path}/, '')
+      #  ! FileTest.exist?(fullpath)
+      #end
+
+      info = ''
+      paths = Dir.glob("#{path}/**/*")
+      older_files = paths.select do |subpath|
         fullpath = subpath.sub(/^#{path}/, '')
-        ! FileTest.exist?(fullpath)
+        # ctime で比較するのはうまくいかない。
+        if FileTest.exist?(fullpath)
+          flag = FileTest.file? fullpath
+          info = '(may exist newer file)' if flag
+        else
+          flag = true
+        end
+        flag
       end
-      not_exist_files.shift # path for root dir
-      not_exist_files.map! {|v| v.sub(/^#{@trashdir}\//, '')}
-      tmp << not_exist_files[0]
-      tmp[-1] += ' ...' if not_exist_files.size > 2
+
+      #pp older_files
+      #exit
+
+      older_files.map! {|v| v.sub(/^#{@trashdir}\//, '')}
+      tmp << older_files[0].sub(/^#{id}/, '')
+      tmp[-1] += ' ...' if older_files.size > 2
+      tmp[-1] += info
+
       results << tmp
     end
+    #pp results
     if results.size > 1
-      Tefil::ColumnFormer.new.form(results)
+      Tefil::ColumnFormer.new.form(results, io)
     else
-      puts "Nothing in ~/.trash"
+      io.puts "Nothing in ~/.trash"
     end
   end
 
