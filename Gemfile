@@ -14,4 +14,5 @@ group :development do
   gem 'filerenamer', '~> 0.0'
   gem "tefil", '~> 0.1'
   gem "builtinextension", '~> 0.1'
+  gem "fakefs", '~> 0.11'
 end

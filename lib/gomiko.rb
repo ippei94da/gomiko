@@ -11,6 +11,8 @@ require 'find'
 #
 class Gomiko
 
+  #class NotFoundError < StandardError; end 
+
   def initialize(dir: nil, verbose: true)
     if dir
       @trashdir = dir
@@ -24,20 +26,22 @@ class Gomiko
     FileUtils.mkdir_p(@trashdir)
   end
 
+  # If paths includes exist and not exist files,
+  # throw all exist file and report not exist files.
   def throw(paths: , time: Time.new, verbose: true)
-    paths.each do |path|
-      unless FileTest.exist? path
-        puts "gomiko rm: cannot remove '#{path}': No such file or directory" if verbose
-        exit
-      end
-    end
-
+    #pp paths
     trash_subdir = mkdir_time(time)
     paths.each do |path|
+      unless FileTest.exist? path
+        if verbose
+          puts "gomiko rm: cannot remove '#{path}': No such file or directory"
+        end
+        next
+      end
+
       dst = trash_subdir + File.expand_path(path)
       dst_dir = File.dirname dst
       FileUtils.mkdir_p(dst_dir)
-      
       FileUtils.mv(path, dst_dir + '/', :verbose => verbose)
     end
   end
@@ -50,7 +54,9 @@ class Gomiko
     end
   end
 
-  def undo(verbose: true, dst_root: '/')
+  def undo(dirs, verbose: true, dst_root: '/')
+
+
     if Dir.glob("#{@trashdir}/*").empty?
       puts "Nothing to undo in #{@trashdir}"
       exit
@@ -80,15 +86,6 @@ class Gomiko
       #pp path
       id = path.sub(/^#{@trashdir}\//, '').split.shift
       tmp << id
-
-      
-      last_path = ''
-      #not_exist_files = Find.find(path).select do |subpath|
-      #  last_path = subpath
-      #  fullpath = subpath.sub(/^#{path}/, '')
-      #  ! FileTest.exist?(fullpath)
-      #end
-
       info = ''
       paths = Dir.glob("#{path}/**/*")
       older_files = paths.select do |subpath|
@@ -102,9 +99,6 @@ class Gomiko
         end
         flag
       end
-
-      #pp older_files
-      #exit
 
       older_files.map! {|v| v.sub(/^#{@trashdir}\//, '')}
       tmp << older_files[0].sub(/^#{id}/, '')
@@ -129,6 +123,11 @@ class Gomiko
     src_root = Pathname.new(src_root)
     path     = Pathname.new(path)
     dst_path = Pathname.new(dst_root) + path
+    #pp src_root
+    #pp path
+    #pp dst_path
+    #pp next_path
+    #pp src_root
 
     if FileTest.directory? (dst_path)
       Dir.glob("#{src_root + path}/*") do |next_path|

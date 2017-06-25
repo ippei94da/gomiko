@@ -29,8 +29,8 @@ class MyCommand < Thor
   end
 
   desc :undo, 'Undo removed files from trash directory'
-  def undo
-    Gomiko.new.undo
+  def undo(* dirs)
+    Gomiko.new.undo(dirs)
   end
 
   desc :ls, 'Show trash directory'
