@@ -23,19 +23,39 @@ class MyCommand < Thor
     default: 0
   option "quiet", type: :boolean,
     default: false
+  #def empty(* dirs)
   def empty
-    Gomiko.new.empty(before: options[:before],
-                       verbose: ! options[:quiet])
+    Gomiko.new.empty(dirs,
+                     before: options[:before],
+                     verbose: ! options[:quiet])
   end
 
   desc :undo, 'Undo removed files from trash directory'
   def undo(* dirs)
-    Gomiko.new.undo(dirs)
+    g = Gomiko.new
+
+    if Dir.glob("#{@trashdir}/*").empty?
+      puts "Nothing to undo in #{@trashdir}"
+      exit
+    end
+
+    dirs = [g.list[-1]] if dirs.empty?
+    dirs.each { |dir| g.undo(dir) }
   end
 
   desc :ls, 'Show trash directory'
   def ls
-    Gomiko.new.ls
+    g = Gomiko.new
+    #pp g.list; exit
+    results = [['size', 'date-time-id', 'typical-path[ ...]']]
+    results += g.list.map do |id|
+      g.info(id)
+    end
+    if results.size > 1
+      Tefil::ColumnFormer.new.form(results)
+    else
+      puts "Nothing in ~/.trash"
+    end
   end
 
 end

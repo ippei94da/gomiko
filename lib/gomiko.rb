@@ -46,73 +46,67 @@ class Gomiko
     end
   end
 
+  #def empty(dirs: [], before: 0, time: Time.now, verbose: true)
   def empty(before: 0, time: Time.now, verbose: true)
-    Dir.glob("#{@trashdir}/*").each do |path|
-      if time -  File.mtime(path) > 86400 * before
-        FileUtils.rm_rf(path, :verbose => verbose)
-      end
+    dirs = []
+    dirs += Dir.glob("#{@trashdir}/*").select do |path|
+      time -  File.mtime(path) > 86400 * before
+    end
+    dirs.each {|path| FileUtils.rm_rf(path, :verbose => verbose)}
+  end
+
+  #def latest
+
+  def undo(dst_dir, verbose: true, io: $stdout)
+    #pp dst_dir; return
+    fullpath = Pathname.new(@trashdir) + dst_dir
+
+    Dir.glob("#{fullpath}/*").sort.each do |path|
+      graft(fullpath, '', dst_root: '/', verbose: verbose)
+    end
+
+    if Dir.glob("#{fullpath}/**/*").find {|path| FileTest.file? path}
+      io.puts "Unable to complete undo: #{fullpath}"
+    else
+      FileUtils.rm_rf fullpath # risky?
     end
   end
 
-  def undo(dirs, verbose: true, dst_root: '/')
+  # Example of return data:
+  #236K 20170623-021233/home/ippei/private/ero/inbox/20170623-015917 ...
+  def info(id)
+    path = Pathname.new(@trashdir) + id
+    results = []
+    results << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
+    results << id
 
-
-    if Dir.glob("#{@trashdir}/*").empty?
-      puts "Nothing to undo in #{@trashdir}"
-      exit
+    paths = Dir.glob("#{path}/**/*").sort
+    addition = ''
+    older_files = paths.select do |subpath|
+      fullpath = subpath.sub(/^#{path}/, '')
+      if FileTest.exist?(fullpath)
+        flag = FileTest.file? fullpath
+        addition = '(may exist newer file)' if flag
+      else
+        flag = true
+      end
+      flag
     end
-    dst_dir = Dir.glob("#{@trashdir}/*").sort_by { |path| File.ctime path }[-1]
 
-    Dir.glob("#{dst_dir}/*").sort.each do |path|
-      #rsync seems to be an good idea.
-      #but it has a problem that it cannot merge to thepath without permission.
-      graft(dst_dir, '', dst_root: dst_root)
+    older_files.map! {|v| v.sub(/^#{@trashdir}\/#{id}/, '')}
+    unless older_files.empty?
+      results << older_files[0]
+      results[-1] += ' ...' if older_files.size > 1
+      results[-1] += addition
     end
-
-    if Dir.glob("#{dst_dir}/**/*").find {|path| FileTest.file? path}
-      puts "Cannot undo: #{dst_dir}"
-    else
-      FileUtils.rm_rf dst_dir # risky?
-    end
+    results
   end
 
   # ls, list
-  def ls(io: $stdout)
-    results = [['size', 'date-time-id', 'path[ ...]']]
-    Dir.glob("#{@trashdir}/*").sort.each do |path|
-      tmp = []
-      tmp << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
-
-      #pp path
-      id = path.sub(/^#{@trashdir}\//, '').split.shift
-      tmp << id
-      info = ''
-      paths = Dir.glob("#{path}/**/*")
-      older_files = paths.select do |subpath|
-        fullpath = subpath.sub(/^#{path}/, '')
-        # ctime で比較するのはうまくいかない。
-        if FileTest.exist?(fullpath)
-          flag = FileTest.file? fullpath
-          info = '(may exist newer file)' if flag
-        else
-          flag = true
-        end
-        flag
-      end
-
-      older_files.map! {|v| v.sub(/^#{@trashdir}\//, '')}
-      tmp << older_files[0].sub(/^#{id}/, '')
-      tmp[-1] += ' ...' if older_files.size > 2
-      tmp[-1] += info
-
-      results << tmp
-    end
-    #pp results
-    if results.size > 1
-      Tefil::ColumnFormer.new.form(results, io)
-    else
-      io.puts "Nothing in ~/.trash"
-    end
+  def list
+    Dir.glob("#{@trashdir}/*").map do |path|
+      path.sub(/^#{@trashdir}\//, '').split[0]
+    end . sort
   end
 
   private
@@ -123,11 +117,6 @@ class Gomiko
     src_root = Pathname.new(src_root)
     path     = Pathname.new(path)
     dst_path = Pathname.new(dst_root) + path
-    #pp src_root
-    #pp path
-    #pp dst_path
-    #pp next_path
-    #pp src_root
 
     if FileTest.directory? (dst_path)
       Dir.glob("#{src_root + path}/*") do |next_path|

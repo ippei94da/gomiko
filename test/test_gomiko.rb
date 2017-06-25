@@ -12,12 +12,14 @@ class TC_Gomiko < Test::Unit::TestCase
 
   #WORKDIR  = 'test/gomiko'
   #TRASHDIR = 'test/gomiko/tmp_trash'
-  WORKDIR  = "#{Dir.pwd}/test/gomiko"
-  TRASHDIR = "#{Dir.pwd}/test/gomiko/tmp_trash"
+  WORKDIR  = "#{Dir.pwd}/test/gomiko/tmp/work"
+  TRASHDIR = "#{Dir.pwd}/test/gomiko/tmp/trash"
 
   #pp WORKDIR; exit
   def setup
     FileUtils.rm_rf TRASHDIR
+    FileUtils.rm_rf WORKDIR
+    FileUtils.mkdir_p WORKDIR
     @g00 = Gomiko.new(dir: TRASHDIR, verbose: false)
   end
 
@@ -99,84 +101,76 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
   end
 
-  def test_undo
+  def test_undo1
     FileUtils.mkdir_p "#{WORKDIR}/a/b"
-    FileUtils.touch "#{WORKDIR}/a/b/c.txt"
-    FileUtils.touch "#{WORKDIR}/a/b/d.txt"
+    FileUtils.touch   "#{WORKDIR}/a/b/c.txt"
+    FileUtils.touch   "#{WORKDIR}/a/b/d.txt"
     @g00.throw(paths: ["#{WORKDIR}/a/b/c.txt"],
                time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
     @g00.throw(paths: ["#{WORKDIR}/a/b/d.txt"],
                time: Time.new(2017, 1, 23, 12, 34, 57),
                verbose: false)
-
-    pp "#{TRASHDIR}/20170123-123456/#{WORKDIR}/a/b/c.txt"
-    #sleep 60
     assert(File.exist? "#{TRASHDIR}/20170123-123456/#{WORKDIR}/a/b/c.txt")
     assert(File.exist? "#{TRASHDIR}/20170123-123457/#{WORKDIR}/a/b/d.txt")
-    @g00.undo(verbose: false, dst_root: "test/gomiko/undo")
-    sleep 60
-    assert      (File.exist? "#{TRASHDIR}/20170123-123456/#{WORKDIR}/a/b/c.txt")
-    assert_false(File.exist? "#{TRASHDIR}/20170123-123457/#{WORKDIR}/a/b/d.txt")
-    assert      (File.exist? "test/gomiko/undo/a/b/d.txt")
+    @g00.undo("20170123-123456", verbose: false)
+    assert_false(File.exist? "#{TRASHDIR}/20170123-123456/#{WORKDIR}/a/b/c.txt")
+    assert      (File.exist? "#{TRASHDIR}/20170123-123457/#{WORKDIR}/a/b/d.txt")
+    assert      (File.exist? "#{WORKDIR}/a/b/c.txt")
   end
 
-#  def test_undo2
-#    FileUtils.mkdir_p "#{WORKDIR}/a/b"
-#    FileUtils.touch "#{WORKDIR}/a/b/c.txt"
-#    FileUtils.touch "#{WORKDIR}/a/b/d.txt"
-#    @g00.throw(paths: ['/a/b/c.txt'], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-#    @g00.throw(paths: ['/a/b/d.txt'], time: Time.new(2017, 1, 23, 12, 34, 57), verbose: false)
-#
-#    assert(File.exist? "#{TRASHDIR}/20170123-123456/a/b/c.txt")
-#    assert(File.exist? "#{TRASHDIR}/20170123-123457/a/b/d.txt")
-#    @g00.undo(verbose: false, dst_root: "test/gomiko/undo", target: '20170123-123456')
-#    assert_false(File.exist? "#{TRASHDIR}/20170123-123456/a/b/c.txt")
-#    assert      (File.exist? "#{TRASHDIR}/20170123-123457/a/b/d.txt")
-#    assert      (File.exist? "test/gomiko/undo/a/b/d.txt")
-#  end
+  def test_undo2
+    FileUtils.mkdir_p "#{WORKDIR}/a/b"
+    FileUtils.touch   "#{WORKDIR}/a/b/c.txt"
+    FileUtils.touch   "#{WORKDIR}/a/b/d.txt"
+    @g00.throw(paths: ["#{WORKDIR}/a/b/c.txt"],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+    @g00.throw(paths: ["#{WORKDIR}/a/b/d.txt"],
+               time: Time.new(2017, 1, 23, 12, 34, 57),
+               verbose: false)
+    assert(File.exist? "#{TRASHDIR}/20170123-123456/#{WORKDIR}/a/b/c.txt")
+    assert(File.exist? "#{TRASHDIR}/20170123-123457/#{WORKDIR}/a/b/d.txt")
+    @g00.undo("#{TRASHDIR}/20170123-123456", verbose: false)
+    assert_false(File.exist? "#{TRASHDIR}/20170123-123456/#{WORKDIR}/a/b/c.txt")
+    assert      (File.exist? "#{TRASHDIR}/20170123-123457/#{WORKDIR}/a/b/d.txt")
+    assert      (File.exist? "#{WORKDIR}/a/b/c.txt")
+  end
 
   # ls, list
-  def test_ls
-    io = StringIO.new
+  def test_list
     a_relpath = 'test/gomiko/a.txt'
-    a_fullpath = File.expand_path 'test/gomiko/a.txt'
     FileUtils.touch a_relpath
-    @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    @g00.ls(io: io) # du に依存していて、 require 'fakefs'していると du でサイズ取れない。
-    io.rewind
-    results = io.readlines
-    corrects = [
-      "size date-time-id    path[ ...]",
-      "28K  20170123-123456 /home/ippei/git/gomikotest/gomiko/a.txt",
-    ]
-
-    ##そのあと同じ名前のファイルを作った場合
-    #FileUtils.touch a_relpath
-    #corrects = [
-    #  "size date-time-id    path[ ...]\n",
-    #  "28K  20170123-123456 /home/ippei/git/gomikotest/gomiko/a.txt (exist)\n",
-    #]
-    #assert_equal(corrects, results)
-  end
-
-  def test_graft1
-    FileUtils.rm_rf(  'test/gomiko/graft')
-    FileUtils.mkdir_p('test/gomiko/graft/src/a/b/c')
-    FileUtils.touch(  'test/gomiko/graft/src/a/b/c/d.txt')
-    @g00.graft('test/gomiko/graft/src',
-               '',
-               dst_root: "test/gomiko/graft/dst",
+    @g00.throw(paths: [a_relpath],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
-    assert(FileTest.directory?('test/gomiko/graft/dst/a/b/c/'))
-    assert(FileTest.file?('test/gomiko/graft/dst/a/b/c/d.txt'))
+    a_relpath = 'test/gomiko/a.txt'
+    FileUtils.touch a_relpath
+    @g00.throw(paths: [a_relpath],
+               time: Time.new(2017, 1, 23, 12, 34, 57),
+               verbose: false)
+
+    corrects = ["20170123-123456", "20170123-123457" ]
+    assert_equal(corrects, @g00.list)
   end
 
-  def test_graft2
-    FileUtils.rm_rf(  'test/gomiko/graft')
-    FileUtils.mkdir_p('test/gomiko/graft/src/a/b/c')
-    FileUtils.mkdir_p('test/gomiko/graft/dst/a')
-    FileUtils.touch(  'test/gomiko/graft/src/a/b/c/d.txt')
+  def test_info1
+    path = "#{WORKDIR}/a.txt"
+    FileUtils.touch path
+    @g00.throw(paths: [path],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+
+    #corrects = ["28K", "20170123-123456", path ] # size is depend on system.
+    results = @g00.info("20170123-123456")
+    #assert_equal(corrects, @g00.info("20170123-123456"))
+    assert_equal('20170123-123456', results[1])
+    assert_equal(path,              results[2])
+  end
+
+  def test_info2
+    path_a = "#{WORKDIR}/a.txt"
+    FileUtils.touch path_a
     @g00.graft('test/gomiko/graft/src',
                'a',
                dst_root: "test/gomiko/graft/dst",
@@ -220,6 +214,7 @@ class TC_Gomiko < Test::Unit::TestCase
   #undef test_graft2
   #undef test_graft3
   #undef test_mkdir_time
+  undef test_info1
 
 end
 
