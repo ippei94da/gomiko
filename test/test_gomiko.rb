@@ -178,6 +178,32 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal(path,              results[2])
   end
 
+  def test_info3
+    FileUtils.mkdir_p "#{WORKDIR}/a/"
+    FileUtils.touch "#{WORKDIR}/a/b"
+    @g00.throw(paths: ["#{WORKDIR}/a"],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+    #size is dependent on system
+    results = @g00.info("20170123-123456")
+    assert_equal('20170123-123456', results[1])
+    assert_equal("#{WORKDIR}/a/", results[2])
+  end
+
+  def test_info4
+    FileUtils.mkdir_p "#{WORKDIR}/a/"
+    FileUtils.touch "#{WORKDIR}/a/b"
+    FileUtils.mkdir_p "#{WORKDIR}/c/"
+    FileUtils.touch "#{WORKDIR}/c/d"
+    @g00.throw(paths: ["#{WORKDIR}/a", "#{WORKDIR}/c"],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+    #size is dependent on system
+    results = @g00.info("20170123-123456")
+    assert_equal('20170123-123456', results[1])
+    assert_equal("#{WORKDIR}/a/ ...", results[2])
+  end
+
   def test_graft
     path_a = "#{WORKDIR}/a.txt"
     FileUtils.touch path_a
@@ -224,7 +250,10 @@ class TC_Gomiko < Test::Unit::TestCase
   #undef test_graft2
   #undef test_graft3
   #undef test_mkdir_time
-  undef test_info1
+  #undef test_info1
+  #undef test_info2
+  #undef test_info3
+  #undef test_info4
 
 end
 

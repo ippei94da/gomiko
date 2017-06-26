@@ -75,31 +75,25 @@ class Gomiko
   # Example of return data:
   #236K 20170623-021233/home/ippei/private/ero/inbox/20170623-015917 ...
   def info(id)
-    path = Pathname.new(@trashdir) + id
+    cur_trash_dir = Pathname.new(@trashdir) + id
     results = []
-    results << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
+    results << `du --human-readable --max-depth=0 #{cur_trash_dir}`.split(' ')[0]
     results << id
 
-    paths = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH).sort
-    #pp paths
-    addition = ''
-    older_files = paths.select do |subpath|
-      fullpath = subpath.sub(/^#{path}/, '')
-      if FileTest.exist?(fullpath)
-        flag = FileTest.file? fullpath
-        addition = '(may exist newer file)' if flag
-      else
-        flag = true
-      end
-      flag
-    end
+    # '/.', で終わるのを除外、元のパスにファイルが存在しないものを抽出。
+    paths = Dir.glob("#{cur_trash_dir}/**/*", File::FNM_DOTMATCH).sort
+    paths = paths.select {|path| ! /\/\.$/.match path }
+    paths = paths.map    {|path|
+      tmp = path.sub(/^#{cur_trash_dir}/, '')
+      tmp += '/' if FileTest.directory? path
+      tmp
+    }
+    paths = paths.select {|path| ! FileTest.exist? path }
+    results << paths[0]
 
-    older_files.map! {|v| v.sub(/^#{@trashdir}\/#{id}/, '')}
-    unless older_files.empty?
-      results << older_files[0]
-      results[-1] += ' ...' if older_files.size > 1
-      results[-1] += addition
-    end
+    ## output '...' when multiple.
+    paths = paths.select{|pa| ! pa.include? paths[0]}
+    results[-1] += ' ...' unless paths.empty?
     results
   end
 
