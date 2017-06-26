@@ -80,7 +80,8 @@ class Gomiko
     results << `du --human-readable --max-depth=0 #{path}`.split(' ')[0] # size
     results << id
 
-    paths = Dir.glob("#{path}/**/*").sort
+    paths = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH).sort
+    #pp paths
     addition = ''
     older_files = paths.select do |subpath|
       fullpath = subpath.sub(/^#{path}/, '')

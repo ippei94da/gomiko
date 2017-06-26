@@ -160,15 +160,25 @@ class TC_Gomiko < Test::Unit::TestCase
     @g00.throw(paths: [path],
                time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
-
-    #corrects = ["28K", "20170123-123456", path ] # size is depend on system.
+    #size is dependent on system
     results = @g00.info("20170123-123456")
-    #assert_equal(corrects, @g00.info("20170123-123456"))
     assert_equal('20170123-123456', results[1])
     assert_equal(path,              results[2])
   end
 
   def test_info2
+    path = "#{WORKDIR}/.a"
+    FileUtils.touch path
+    @g00.throw(paths: [path],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+    #size is dependent on system
+    results = @g00.info("20170123-123456")
+    assert_equal('20170123-123456', results[1])
+    assert_equal(path,              results[2])
+  end
+
+  def test_graft
     path_a = "#{WORKDIR}/a.txt"
     FileUtils.touch path_a
     @g00.graft('test/gomiko/graft/src',
@@ -179,7 +189,7 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(FileTest.file?('test/gomiko/graft/dst/a/b/c/d.txt'))
   end
 
-  def test_graft3
+  def test_graft2
     FileUtils.rm_rf(  'test/gomiko/graft')
     FileUtils.mkdir_p('test/gomiko/graft/src/a/b/c')
     FileUtils.mkdir_p('test/gomiko/graft/dst/a/b/c')
