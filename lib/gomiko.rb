@@ -121,6 +121,8 @@ class Gomiko
     elsif FileTest.exist? (dst_path)
       puts "normal file already exist: #{dst_path}" if verbose
     else
+      #pp src_root + path
+      #pp dst_path
       FileUtils.mv(src_root + path, dst_path, noop: false, verbose: verbose )
     end
     return
