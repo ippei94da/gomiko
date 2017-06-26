@@ -25,7 +25,8 @@ class MyCommand < Thor
     default: false
   #def empty(* dirs)
   def empty
-    Gomiko.new.empty(dirs,
+    #Gomiko.new.empty(dirs,
+    Gomiko.new.empty(
                      before: options[:before],
                      verbose: ! options[:quiet])
   end
@@ -47,7 +48,7 @@ class MyCommand < Thor
   def ls
     g = Gomiko.new
     #pp g.list; exit
-    results = [['size', 'date-time-id', 'typical-path[ ...]']]
+    results = [['size', 'date-time ID', 'original paths[ ...]']]
     results += g.list.map do |id|
       g.info(id)
     end
