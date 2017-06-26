@@ -204,15 +204,18 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal("#{WORKDIR}/a/ ...", results[2])
   end
 
+  #TODO
   def test_graft
     path_a = "#{WORKDIR}/a.txt"
+    FileUtils.mkdir_p "test/gomiko/graft/src"
+    FileUtils.mkdir_p "test/gomiko/graft/dst"
     FileUtils.touch path_a
-    @g00.graft('test/gomiko/graft/src',
-               'a',
+    @g00.graft("test/gomiko/graft/src",
+               "a",
                dst_root: "test/gomiko/graft/dst",
                verbose: false)
-    assert(FileTest.directory?('test/gomiko/graft/dst/a/b/c/'))
-    assert(FileTest.file?('test/gomiko/graft/dst/a/b/c/d.txt'))
+    assert(FileTest.directory?("test/gomiko/graft/dst/a/b/c/"))
+    assert(FileTest.file?("test/gomiko/graft/dst/a/b/c/d.txt"))
   end
 
   def test_graft2
