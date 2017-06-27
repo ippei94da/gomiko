@@ -10,21 +10,19 @@ end
 
 class TC_Gomiko < Test::Unit::TestCase
 
-  #WORKDIR  = 'test/gomiko'
-  #TRASHDIR = 'test/gomiko/tmp_trash'
-  WORKDIR  = "#{Dir.pwd}/test/gomiko/tmp/work"
-  TRASHDIR = "#{Dir.pwd}/test/gomiko/tmp/trash"
+  TMPDIR   = "#{Dir.pwd}/test/gomiko/tmp"
+  WORKDIR  = "#{TMPDIR}/work"
+  TRASHDIR = "#{TMPDIR}/trash"
 
   #pp WORKDIR; exit
   def setup
-    FileUtils.rm_rf TRASHDIR
-    FileUtils.rm_rf WORKDIR
+    FileUtils.rm_rf TMPDIR
     FileUtils.mkdir_p WORKDIR
     @g00 = Gomiko.new(dir: TRASHDIR, verbose: false)
   end
 
   def teardown
-    FileUtils.rm_rf TRASHDIR
+    FileUtils.rm_rf TMPDIR
   end
 
   def test_initialize
@@ -39,7 +37,6 @@ class TC_Gomiko < Test::Unit::TestCase
     a_relpath = 'test/gomiko/a.txt'
     a_fullpath = File.expand_path 'test/gomiko/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
-    #File.open(a_relpath, 'w')
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
@@ -54,24 +51,19 @@ class TC_Gomiko < Test::Unit::TestCase
     FileUtils.mkdir_p 'test/gomiko/b'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    #pp "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
     assert_false(FileTest.exist? a_relpath)
     assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
 
-    # include not exist file
-    # HERE
     @g00.throw(paths: [a_relpath, 'not_exist'],
                time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
     assert_false(FileTest.exist? (a_relpath))
-    # HERE
   end
 
   def test_empty
     a_relpath = 'test/gomiko/a.txt'
     a_fullpath = File.expand_path 'test/gomiko/a.txt'
-    #File.open(a_relpath, 'w')
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
 
@@ -84,7 +76,6 @@ class TC_Gomiko < Test::Unit::TestCase
     # before option
     a_relpath = 'test/gomiko/a.txt'
     a_fullpath = File.expand_path 'test/gomiko/a.txt'
-    #File.open(a_relpath, 'w')
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath],
                time: Time.new(2017, 1, 23, 12, 34, 56),
@@ -204,21 +195,7 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal("#{WORKDIR}/a/ ...", results[2])
   end
 
-  #TODO
   def test_graft
-    path_a = "#{WORKDIR}/a.txt"
-    FileUtils.mkdir_p "test/gomiko/graft/src"
-    FileUtils.mkdir_p "test/gomiko/graft/dst"
-    FileUtils.touch path_a
-    @g00.graft("test/gomiko/graft/src",
-               "a",
-               dst_root: "test/gomiko/graft/dst",
-               verbose: false)
-    assert(FileTest.directory?("test/gomiko/graft/dst/a/b/c/"))
-    assert(FileTest.file?("test/gomiko/graft/dst/a/b/c/d.txt"))
-  end
-
-  def test_graft2
     FileUtils.rm_rf(  'test/gomiko/graft')
     FileUtils.mkdir_p('test/gomiko/graft/src/a/b/c')
     FileUtils.mkdir_p('test/gomiko/graft/dst/a/b/c')
