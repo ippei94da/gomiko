@@ -232,8 +232,8 @@ class Gomiko
   end
 
   def path2id(path)
-    result = Pathname.new(@trashdir) + dst_dir
-    return result
+    path.sub(/^#{@trashdir}\//, '')
+    #result = Pathname.new(@trashdir) + path
   end
 
 end

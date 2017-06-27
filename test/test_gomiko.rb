@@ -248,7 +248,7 @@ class TC_Gomiko < Test::Unit::TestCase
 
   def test_path2id
     assert_equal("20170123-123456", @g00.path2id("#{TRASHDIR}/20170123-123456"))
-    assert_equal("20170123-123456", @g00.path2id(20170123-123456"))
+    assert_equal("20170123-123456", @g00.path2id("20170123-123456"))
   end
 
   #undef test_initialize
