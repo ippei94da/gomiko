@@ -74,7 +74,8 @@ class Gomiko
 
   # Example of return data:
   #236K 20170623-021233/home/ippei/private/ero/inbox/20170623-015917 ...
-  def info(id, long: false)
+  #def info(id, long: false)
+  def info(id)
     cur_trash_dir = Pathname.new(@trashdir) + id
     results = []
     results << `du --human-readable --max-depth=0 #{cur_trash_dir}`.split(' ')[0]
@@ -86,6 +87,11 @@ class Gomiko
     # '/.', で終わるのを除外
     trash_paths = trash_paths.select { |t_path| ! /\/\.$/.match t_path }
 
+    #memo: ディレクトリのタイムスタンプ
+    #・atime … 最終アクセス時刻 (access time)
+    #・mtime … 最終変更時刻 (modify time)
+    #・ctime … 最終ステータス変更時刻 (change time)
+    #これらは作成日時じゃない。birthtime があるファイルシステムもあるが、Linux の ext4 とかはムリ。
     # 存在しなければ、移動してきた
     # 存在するならば、
     #   ゴミパスがディレクトリならば、
@@ -97,66 +103,64 @@ class Gomiko
     #     元パスがディレクトリならば、新たに作られた
     #     元パスがファイルならば新たに作られ、重複。
     #title_long = ['Exist']
-    rm_target_candidates = []
+    #
+    #rm_target_candidates = []
+    candidates = [] # fo rm target
     results_long = []
     trash_paths.each do |trash_path|
+      #pp trash_path
       orig_path = trash_path.sub(/^#{cur_trash_dir}/, '')
 
       trash_type = ftype_str(trash_path)
 
       if FileTest.exist? orig_path
-        exist_str = 'E'
+        #exist_str = 'E'
         orig_type = ftype_str(orig_path)
-
-        if File.ctime orig_path < File.ctime trash_path
-          compare_str = '<'
-        elsif File.ctime orig_path > File.ctime trash_path
-          # create after 'rm'
-          compare_str = '>'
-          rm_target_candidates << trash_path
-        else
-          # create at the same time of 'rm'. rare event.
-          compare_str = '='
-          rm_target_candidates << trash_path
+        
+        unless File.ftype(trash_path) == File.ftype(orig_path)
+          candidates << trash_path
         end
+
+        ## waiting for implementing 'birthtime' on every system...
+        #if File.ctime(orig_path) < File.ctime(trash_path)
+        #  compare_str = '<'
+        #elsif File.ctime(orig_path) > File.ctime(trash_path)
+        #  # create after 'rm'
+        #  compare_str = '>'
+        #  candidates << trash_path
+        #else
+        #  # create at the same time of 'rm'. rare event.
+        #  compare_str = '='
+        #  candidates << trash_path
+        #end
       else
-        rm_target_candidates << trash_path
-        exist_str   = 'N'
-        orig_type   = '-'
-        compare_str = '-'
+        candidates << trash_path
+        #exist_str   = ' '
+        orig_type   = ' '
       end
 
-      results_long << [
-        exist_str,
-        compare_str,
-        orig_type,
-        trash_type,
-        trash_path
+      #results_long << [ exist_str, orig_type, trash_type,
+      results_long << [ trash_type, orig_type,
+                        trash_path.sub(/^#{cur_trash_dir}/, '')
       ]
     end
 
-    if long
-    else
-      results << rm_target_candidates
-    end
+    ## if no candidate, last file is adopted.
+    candidates = [trash_paths[-1] + ' (exist in original path)'] if candidates.empty?
 
-
-
-
-
-    一切のファイルがなければ、only directory とか。
-
-    paths = paths.map    {|path|
+    candidates = candidates.map    {|path|
       tmp = path.sub(/^#{cur_trash_dir}/, '')
       tmp += '/' if FileTest.directory? path
       tmp
     }
-    paths = paths.select {|path| ! FileTest.exist? path }
-    results << paths[0]
+    candidates = candidates.select {|path| ! FileTest.exist? path }
+    results << candidates[0]
 
     ## output '...' when multiple.
-    paths = paths.select{|pa| ! pa.include? paths[0]}
-    results[-1] += ' ...' unless paths.empty?
+    candidates = candidates.select{|pa| ! pa.include? candidates[0]}
+    #pp candidates; exit
+    results[-1] += ' ...' unless candidates.empty?
+    results << results_long
     results
   end
 

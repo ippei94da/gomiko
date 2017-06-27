@@ -155,6 +155,20 @@ class TC_Gomiko < Test::Unit::TestCase
     results = @g00.info("20170123-123456")
     assert_equal('20170123-123456', results[1])
     assert_equal(path,              results[2])
+    #pp results[3]
+    corrects = [
+      ["/", "/", "/home"],
+      ["/", "/", "/home/ippei"],
+      ["/", "/", "/home/ippei/git"],
+      ["/", "/", "/home/ippei/git/gomiko"],
+      ["/", "/", "/home/ippei/git/gomiko/test"],
+      ["/", "/", "/home/ippei/git/gomiko/test/gomiko"],
+      ["/", "/", "/home/ippei/git/gomiko/test/gomiko/tmp"],
+      ["/", "/", "/home/ippei/git/gomiko/test/gomiko/tmp/work"],
+      [".", " ", "/home/ippei/git/gomiko/test/gomiko/tmp/work/a.txt"]
+    ]
+    assert_equal(corrects, results[3])
+
   end
 
   def test_info2
@@ -202,12 +216,9 @@ class TC_Gomiko < Test::Unit::TestCase
                verbose: false)
     FileUtils.mkdir_p "#{WORKDIR}/a/b"
     results = @g00.info("20170123-123456")
+    #pp results
     assert_equal('20170123-123456', results[1])
-    assert_equal("#{WORKDIR}/a/ (may exist in original path)", results[2])
-  end
-
-  def test_info_long
-    TODO
+    assert_equal("#{WORKDIR}/a/b (exist in original path)", results[2])
   end
 
   def test_graft

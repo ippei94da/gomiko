@@ -49,25 +49,37 @@ class MyCommand < Thor
   option "long", type: :boolean,
     default: false,
     aliases: 'l'
-  def ls
+  def ls(* ids)
     g = Gomiko.new
-    #pp g.list; exit
-    results = [['size', 'date-time ID', 'original paths[ ...]']]
-    results += g.list.map do |id|
-      #if options[:long]
-      #  g.info_long(id)
-      #else
-      #  g.info(id)
-      #end
-      g.info(id)
-    end
-    if results.size > 1
-      Tefil::ColumnFormer.new.form(results)
-    else
+    if g.list.empty?
       puts "Nothing in ~/.trash"
+      exit
+    end
+    ids = g.list if ids.empty?
+    if options[:long]
+      ids.each do |id|
+        #results = [['size', 'date-time ID', 'original paths[ ...]']]
+        results = g.info(id)
+        printf("%-10s: %s\n", 'size', results[0])
+        printf("%-10s: %s\n", 'id', results[1])
+        printf("%-10s: %s\n", 'guess path', results[2])
+        #pp results[3]
+        puts '-' * 60
+        puts '+----- filetype in trash'
+        puts '| +--- filetype in original path'
+        puts '| | +- original path'
+        Tefil::ColumnFormer.new.form( results[3])
+        puts
+      end
+    else
+      results = [['size', 'date-time ID', 'original paths[ ...]']]
+      results += ids.map do |id|
+        g.info(id)[0..2]
+      end
+      Tefil::ColumnFormer.new.form(results)
     end
   end
-
 end
+
 MyCommand.start(ARGV)
 
