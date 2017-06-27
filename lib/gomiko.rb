@@ -231,6 +231,10 @@ class Gomiko
     result
   end
 
+  def path2id(path)
+    result = Pathname.new(@trashdir) + dst_dir
+    return result
+  end
 
 end
 

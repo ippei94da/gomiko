@@ -5,7 +5,7 @@ require "pp"
 require "helper"
 
 class Gomiko
-  public :graft, :mkdir_time
+  public :graft, :mkdir_time, :path2id
 end
 
 class TC_Gomiko < Test::Unit::TestCase
@@ -244,6 +244,11 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(      FileTest.directory? "#{TRASHDIR}/20170123-123456")
     assert(      FileTest.directory? "#{TRASHDIR}/20170123-123456-1")
     
+  end
+
+  def test_path2id
+    assert_equal("20170123-123456", @g00.path2id("#{TRASHDIR}/20170123-123456"))
+    assert_equal("20170123-123456", @g00.path2id(20170123-123456"))
   end
 
   #undef test_initialize
