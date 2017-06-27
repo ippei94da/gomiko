@@ -44,12 +44,21 @@ class MyCommand < Thor
     dirs.each { |dir| g.undo(dir) }
   end
 
+  ## list
   desc :ls, 'Show trash directory'
+  option "long", type: :boolean,
+    default: false,
+    aliases: 'l'
   def ls
     g = Gomiko.new
     #pp g.list; exit
     results = [['size', 'date-time ID', 'original paths[ ...]']]
     results += g.list.map do |id|
+      #if options[:long]
+      #  g.info_long(id)
+      #else
+      #  g.info(id)
+      #end
       g.info(id)
     end
     if results.size > 1

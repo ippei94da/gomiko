@@ -74,15 +74,78 @@ class Gomiko
 
   # Example of return data:
   #236K 20170623-021233/home/ippei/private/ero/inbox/20170623-015917 ...
-  def info(id)
+  def info(id, long: false)
     cur_trash_dir = Pathname.new(@trashdir) + id
     results = []
     results << `du --human-readable --max-depth=0 #{cur_trash_dir}`.split(' ')[0]
     results << id
 
-    # '/.', で終わるのを除外、元のパスにファイルが存在しないものを抽出。
-    paths = Dir.glob("#{cur_trash_dir}/**/*", File::FNM_DOTMATCH).sort
-    paths = paths.select {|path| ! /\/\.$/.match path }
+    # 元のパスにファイルが存在しないものを抽出。
+    trash_paths = Dir.glob("#{cur_trash_dir}/**/*", File::FNM_DOTMATCH).sort
+
+    # '/.', で終わるのを除外
+    trash_paths = trash_paths.select { |t_path| ! /\/\.$/.match t_path }
+
+    # 存在しなければ、移動してきた
+    # 存在するならば、
+    #   ゴミパスがディレクトリならば、
+    #     元パスがディレクトリならば
+    #       元パスの更新時刻が新しければ、新たに作られた
+    #       元パスの更新時刻が古ければ、削除次に作られたものなので無視
+    #     元パスがファイルならば、新たに作られた
+    #   ゴミパスがファイルならば、
+    #     元パスがディレクトリならば、新たに作られた
+    #     元パスがファイルならば新たに作られ、重複。
+    #title_long = ['Exist']
+    rm_target_candidates = []
+    results_long = []
+    trash_paths.each do |trash_path|
+      orig_path = trash_path.sub(/^#{cur_trash_dir}/, '')
+
+      trash_type = ftype_str(trash_path)
+
+      if FileTest.exist? orig_path
+        exist_str = 'E'
+        orig_type = ftype_str(orig_path)
+
+        if File.ctime orig_path < File.ctime trash_path
+          compare_str = '<'
+        elsif File.ctime orig_path > File.ctime trash_path
+          # create after 'rm'
+          compare_str = '>'
+          rm_target_candidates << trash_path
+        else
+          # create at the same time of 'rm'. rare event.
+          compare_str = '='
+          rm_target_candidates << trash_path
+        end
+      else
+        rm_target_candidates << trash_path
+        exist_str   = 'N'
+        orig_type   = '-'
+        compare_str = '-'
+      end
+
+      results_long << [
+        exist_str,
+        compare_str,
+        orig_type,
+        trash_type,
+        trash_path
+      ]
+    end
+
+    if long
+    else
+      results << rm_target_candidates
+    end
+
+
+
+
+
+    一切のファイルがなければ、only directory とか。
+
     paths = paths.map    {|path|
       tmp = path.sub(/^#{cur_trash_dir}/, '')
       tmp += '/' if FileTest.directory? path
@@ -96,6 +159,7 @@ class Gomiko
     results[-1] += ' ...' unless paths.empty?
     results
   end
+
 
   # ls, list
   def list
@@ -148,6 +212,19 @@ class Gomiko
       end
     end
     dirname
+  end
+
+  def ftype_str(path)
+    if File.directory? path
+      result = '/'
+    elsif File.symlink? path
+      result = '@'
+    elsif File.file? path
+      result = '.'
+    else
+      result = '?'
+    end
+    result
   end
 
 
