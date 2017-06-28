@@ -29,7 +29,6 @@ class Gomiko
   # If paths includes exist and not exist files,
   # throw all exist file and report not exist files.
   def throw(paths: , time: Time.new, verbose: true)
-    #pp paths
     trash_subdir = mkdir_time(time)
     paths.each do |path|
       unless FileTest.exist? path
@@ -46,8 +45,8 @@ class Gomiko
     end
   end
 
-  #def empty(dirs: [], before: 0, time: Time.now, verbose: true)
-  def empty(before: 0, time: Time.now, verbose: true)
+  #def empty(before: 0, time: Time.now, verbose: true)
+  def empty(dirs: [], before: 0, time: Time.now, verbose: true)
     dirs = []
     dirs += Dir.glob("#{@trashdir}/*").select do |path|
       time -  File.mtime(path) > 86400 * before
@@ -57,14 +56,12 @@ class Gomiko
 
   #def latest
 
-  def undo(dst_dir, verbose: true, io: $stdout)
-    #pp dst_dir; return
-    fullpath = Pathname.new(@trashdir) + dst_dir
-
+  def undo(id, verbose: true, io: $stdout)
+    id = path2id id
+    fullpath = Pathname.new(@trashdir) + id
     Dir.glob("#{fullpath}/*").sort.each do |path|
       graft(fullpath, '', dst_root: '/', verbose: verbose)
     end
-
     if Dir.glob("#{fullpath}/**/*").find {|path| FileTest.file? path}
       io.puts "Unable to complete undo: #{fullpath}"
     else
@@ -76,6 +73,7 @@ class Gomiko
   #236K 20170623-021233/home/ippei/private/ero/inbox/20170623-015917 ...
   #def info(id, long: false)
   def info(id)
+    id = path2id id
     cur_trash_dir = Pathname.new(@trashdir) + id
     results = []
     results << `du --human-readable --max-depth=0 #{cur_trash_dir}`.split(' ')[0]
@@ -233,7 +231,6 @@ class Gomiko
 
   def path2id(path)
     path.sub(/^#{@trashdir}\//, '')
-    #result = Pathname.new(@trashdir) + path
   end
 
 end

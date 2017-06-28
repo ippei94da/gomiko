@@ -23,10 +23,11 @@ class MyCommand < Thor
     default: 0
   option "quiet", type: :boolean,
     default: false
-  #def empty(* dirs)
   def empty
-    #Gomiko.new.empty(dirs,
-    Gomiko.new.empty(
+    #Gomiko.new.empty(
+    #                 before: options[:before],
+    #                 verbose: ! options[:quiet])
+    Gomiko.new.empty( * ids,
                      before: options[:before],
                      verbose: ! options[:quiet])
   end
@@ -58,13 +59,13 @@ class MyCommand < Thor
     ids = g.list if ids.empty?
     if options[:long]
       ids.each do |id|
+        puts '-' * 60
         #results = [['size', 'date-time ID', 'original paths[ ...]']]
         results = g.info(id)
         printf("%-10s: %s\n", 'size', results[0])
         printf("%-10s: %s\n", 'id', results[1])
         printf("%-10s: %s\n", 'guess path', results[2])
         #pp results[3]
-        puts '-' * 60
         puts '+----- filetype in trash'
         puts '| +--- filetype in original path'
         puts '| | +- original path'
