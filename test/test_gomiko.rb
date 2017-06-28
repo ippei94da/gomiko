@@ -316,23 +316,5 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal("20170123-123456", @g00.path2id("20170123-123456"))
   end
 
-  #undef test_initialize
-  #undef test_throw
-  #undef test_empty1
-  #undef test_empty2
-  #undef test_empty3 #mtime
-  ##undef test_empty4 #mtime
-  #undef test_undo1
-  #undef test_undo2
-  #undef test_list
-  #undef test_info1
-  #undef test_info2
-  #undef test_info3
-  #undef test_info4
-  #undef test_info5
-  #undef test_graft
-  #undef test_mkdir_time
-  #undef test_path2id
-
 end
 
