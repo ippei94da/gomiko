@@ -11,6 +11,8 @@ require 'find'
 #
 class Gomiko
 
+  attr_reader :trashdir
+
   #class NotFoundError < StandardError; end 
 
   def initialize(dir: nil, verbose: true)
@@ -29,29 +31,43 @@ class Gomiko
   # If paths includes exist and not exist files,
   # throw all exist file and report not exist files.
   def throw(paths: , time: Time.new, verbose: true)
-    trash_subdir = mkdir_time(time)
-    paths.each do |path|
-      unless FileTest.exist? path
+    paths = paths.select do |path|
+      flag = FileTest.exist? path
+      unless flag
         if verbose
           puts "gomiko rm: cannot remove '#{path}': No such file or directory"
         end
-        next
       end
+      flag
+    end
+    return if paths.empty?
 
+    trash_subdir = mkdir_time(time)
+    paths.each do |path|
       dst = trash_subdir + File.expand_path(path)
       dst_dir = File.dirname dst
       FileUtils.mkdir_p(dst_dir)
       FileUtils.mv(path, dst_dir + '/', :verbose => verbose)
+      File.utime(time, time, trash_subdir)
     end
   end
 
-  #def empty(before: 0, time: Time.now, verbose: true)
-  def empty(dirs: [], before: 0, time: Time.now, verbose: true)
-    dirs = []
-    dirs += Dir.glob("#{@trashdir}/*").select do |path|
-      time -  File.mtime(path) > 86400 * before
+  def empty(ids: [], mtime: 0, time: Time.now, verbose: true)
+    ids.map! {|v| path2id v}
+    ids = list if ids.empty?
+    dirs = ids.map {|v| @trashdir + '/' + v}
+    dirs = dirs.select { |v|
+      begin
+        File.mtime("#{v}") - time < 86400 * mtime
+      rescue Errno::ENOENT
+        puts "Not found: #{v}"
+      end
+    }
+    if dirs.empty?
+      puts "No directory was emptied."
+    else
+      dirs.each {|path| FileUtils.rm_rf(path, :verbose => verbose)}
     end
-    dirs.each {|path| FileUtils.rm_rf(path, :verbose => verbose)}
   end
 
   #def latest
@@ -71,13 +87,13 @@ class Gomiko
 
   # Example of return data:
   #236K 20170623-021233/home/ippei/private/ero/inbox/20170623-015917 ...
-  #def info(id, long: false)
   def info(id)
     id = path2id id
     cur_trash_dir = Pathname.new(@trashdir) + id
     results = []
     results << `du --human-readable --max-depth=0 #{cur_trash_dir}`.split(' ')[0]
     results << id
+    #pp results
 
     # 元のパスにファイルが存在しないものを抽出。
     trash_paths = Dir.glob("#{cur_trash_dir}/**/*", File::FNM_DOTMATCH).sort
@@ -106,19 +122,14 @@ class Gomiko
     candidates = [] # fo rm target
     results_long = []
     trash_paths.each do |trash_path|
-      #pp trash_path
       orig_path = trash_path.sub(/^#{cur_trash_dir}/, '')
-
       trash_type = ftype_str(trash_path)
-
       if FileTest.exist? orig_path
-        #exist_str = 'E'
         orig_type = ftype_str(orig_path)
         
         unless File.ftype(trash_path) == File.ftype(orig_path)
           candidates << trash_path
         end
-
         ## waiting for implementing 'birthtime' on every system...
         #if File.ctime(orig_path) < File.ctime(trash_path)
         #  compare_str = '<'
@@ -133,35 +144,37 @@ class Gomiko
         #end
       else
         candidates << trash_path
-        #exist_str   = ' '
         orig_type   = ' '
       end
-
-      #results_long << [ exist_str, orig_type, trash_type,
       results_long << [ trash_type, orig_type,
                         trash_path.sub(/^#{cur_trash_dir}/, '')
       ]
     end
 
     ## if no candidate, last file is adopted.
-    candidates = [trash_paths[-1] + ' (exist in original path)'] if candidates.empty?
+    if trash_paths.empty?
+      results << '(empty)'
+      results << []
+    else
+       trash_paths
+      candidates = [trash_paths[-1] + ' (exist in original path)'] if candidates.empty?
+      candidates = candidates.map    {|path|
+        tmp = path.sub(/^#{cur_trash_dir}/, '')
+        tmp += '/' if FileTest.directory? path
+        tmp
+      }
+      candidates = candidates.select {|path| ! FileTest.exist? path }
+      results << candidates[0]
 
-    candidates = candidates.map    {|path|
-      tmp = path.sub(/^#{cur_trash_dir}/, '')
-      tmp += '/' if FileTest.directory? path
-      tmp
-    }
-    candidates = candidates.select {|path| ! FileTest.exist? path }
-    results << candidates[0]
-
-    ## output '...' when multiple.
-    candidates = candidates.select{|pa| ! pa.include? candidates[0]}
-    #pp candidates; exit
-    results[-1] += ' ...' unless candidates.empty?
-    results << results_long
+      ## output '...' when multiple.
+      candidates = candidates.select{|pa| ! pa.include? candidates[0]}
+      #pp candidates; exit
+      results[-1] += ' ...' unless candidates.empty?
+      results << results_long
+      #pp results
+    end
     results
   end
-
 
   # ls, list
   def list

@@ -15,20 +15,23 @@ class MyCommand < Thor
   #  type: :boolean,
   #  default: false
   def rm(* paths)
+    #paths.select do |path|
+    #  File.exist? path
+    #end
     Gomiko.new.throw(paths: paths)
   end
 
   desc :empty, 'Remove files in trash directory'
-  option "before", type: :numeric,
-    default: 0
+  option "mtime",
+    #type: :numeric,
+    type: :string,
+    desc: 'Data was last modified n*24 hours ago.',
+    default: '0'
   option "quiet", type: :boolean,
     default: false
-  def empty
-    #Gomiko.new.empty(
-    #                 before: options[:before],
-    #                 verbose: ! options[:quiet])
-    Gomiko.new.empty( * ids,
-                     before: options[:before],
+  def empty(* ids)
+    Gomiko.new.empty(ids: ids,
+                     mtime: options[:mtime].to_i,
                      verbose: ! options[:quiet])
   end
 
@@ -42,7 +45,14 @@ class MyCommand < Thor
     end
 
     dirs = [g.list[-1]] if dirs.empty?
-    dirs.each { |dir| g.undo(dir) }
+    dirs.each do |dir|
+      begin
+        g.undo(dir)
+      rescue Errno::EACCES
+        puts "Permission denined: #{dir}"
+      end
+    end
+
   end
 
   ## list
@@ -74,6 +84,7 @@ class MyCommand < Thor
       end
     else
       results = [['size', 'date-time ID', 'original paths[ ...]']]
+      #pp ids
       results += ids.map do |id|
         g.info(id)[0..2]
       end
