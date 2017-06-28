@@ -70,7 +70,6 @@ class MyCommand < Thor
     if options[:long]
       ids.each do |id|
         puts '-' * 60
-        #results = [['size', 'date-time ID', 'original paths[ ...]']]
         results = g.info(id)
         printf("%-10s: %s\n", 'size', results[0])
         printf("%-10s: %s\n", 'id', results[1])
@@ -83,7 +82,7 @@ class MyCommand < Thor
         puts
       end
     else
-      results = [['size', 'date-time ID', 'original paths[ ...]']]
+      results = [['size', 'ID', 'original paths[ ...]']]
       #pp ids
       results += ids.map do |id|
         g.info(id)[0..2]
