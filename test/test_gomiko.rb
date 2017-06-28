@@ -10,7 +10,7 @@ end
 
 class TC_Gomiko < Test::Unit::TestCase
 
-  TMPDIR   = "#{Dir.pwd}/test/gomiko/tmp"
+  TMPDIR   = "#{Dir.pwd}/test/tmp"
   WORKDIR  = "#{TMPDIR}/work"
   TRASHDIR = "#{TMPDIR}/trash"
 
@@ -34,8 +34,8 @@ class TC_Gomiko < Test::Unit::TestCase
 
   def test_throw
     # remove file
-    a_relpath = 'test/gomiko/a.txt'
-    a_fullpath = File.expand_path 'test/gomiko/a.txt'
+    a_relpath = 'test/tmp/a.txt'
+    a_fullpath = File.expand_path 'test/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
@@ -49,10 +49,10 @@ class TC_Gomiko < Test::Unit::TestCase
 
     # remove directory
     setup
-    a_relpath = 'test/gomiko/b/a.txt'
-    a_fullpath = File.expand_path 'test/gomiko/b/a.txt'
+    a_relpath = 'test/tmp/b/a.txt'
+    a_fullpath = File.expand_path 'test/tmp/b/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
-    FileUtils.mkdir_p 'test/gomiko/b'
+    FileUtils.mkdir_p 'test/tmp/b'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
@@ -66,8 +66,8 @@ class TC_Gomiko < Test::Unit::TestCase
   end
 
   def test_empty1
-    a_relpath = 'test/gomiko/a.txt'
-    a_fullpath = File.expand_path 'test/gomiko/a.txt'
+    a_relpath = 'test/tmp/a.txt'
+    a_fullpath = File.expand_path 'test/tmp/a.txt'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
     assert(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
@@ -76,10 +76,10 @@ class TC_Gomiko < Test::Unit::TestCase
   end
 
   def test_empty2
-    a_relpath = 'test/gomiko/a.txt'
-    b_relpath = 'test/gomiko/b.txt'
-    a_fullpath = File.expand_path 'test/gomiko/a.txt'
-    b_fullpath = File.expand_path 'test/gomiko/b.txt'
+    a_relpath = 'test/tmp/a.txt'
+    b_relpath = 'test/tmp/b.txt'
+    a_fullpath = File.expand_path 'test/tmp/a.txt'
+    b_fullpath = File.expand_path 'test/tmp/b.txt'
     FileUtils.touch a_relpath
     FileUtils.touch b_relpath
     @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
@@ -93,8 +93,8 @@ class TC_Gomiko < Test::Unit::TestCase
 
   def test_empty3 #mtime
     # mtime option
-    a_relpath = 'test/gomiko/a.txt'
-    a_fullpath = File.expand_path 'test/gomiko/a.txt'
+    a_relpath = 'test/tmp/a.txt'
+    a_fullpath = File.expand_path 'test/tmp/a.txt'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath],
                time: Time.new(2017, 6, 15, 00, 00, 00),
@@ -113,14 +113,14 @@ class TC_Gomiko < Test::Unit::TestCase
 
   def test_empty4 #mtime
     # mtime option
-    a_relpath = 'test/gomiko/a.txt'
-    b_relpath = 'test/gomiko/b.txt'
-    c_relpath = 'test/gomiko/c.txt'
-    d_relpath = 'test/gomiko/d.txt'
-    a_fullpath = File.expand_path 'test/gomiko/a.txt'
-    b_fullpath = File.expand_path 'test/gomiko/b.txt'
-    c_fullpath = File.expand_path 'test/gomiko/c.txt'
-    d_fullpath = File.expand_path 'test/gomiko/d.txt'
+    a_relpath = 'test/tmp/a.txt'
+    b_relpath = 'test/tmp/b.txt'
+    c_relpath = 'test/tmp/c.txt'
+    d_relpath = 'test/tmp/d.txt'
+    a_fullpath = File.expand_path 'test/tmp/a.txt'
+    b_fullpath = File.expand_path 'test/tmp/b.txt'
+    c_fullpath = File.expand_path 'test/tmp/c.txt'
+    d_fullpath = File.expand_path 'test/tmp/d.txt'
     FileUtils.touch a_relpath
     FileUtils.touch b_relpath
     FileUtils.touch c_relpath
@@ -191,12 +191,12 @@ class TC_Gomiko < Test::Unit::TestCase
 
   # ls, list
   def test_list1
-    a_relpath = 'test/gomiko/a.txt'
+    a_relpath = 'test/tmp/a.txt'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath],
                time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
-    a_relpath = 'test/gomiko/a.txt'
+    a_relpath = 'test/tmp/a.txt'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath],
                time: Time.new(2017, 1, 23, 12, 34, 57),
@@ -228,10 +228,9 @@ class TC_Gomiko < Test::Unit::TestCase
       ["/", "/", "/home/ippei/git"],
       ["/", "/", "/home/ippei/git/gomiko"],
       ["/", "/", "/home/ippei/git/gomiko/test"],
-      ["/", "/", "/home/ippei/git/gomiko/test/gomiko"],
-      ["/", "/", "/home/ippei/git/gomiko/test/gomiko/tmp"],
-      ["/", "/", "/home/ippei/git/gomiko/test/gomiko/tmp/work"],
-      [".", " ", "/home/ippei/git/gomiko/test/gomiko/tmp/work/a.txt"]
+      ["/", "/", "/home/ippei/git/gomiko/test/tmp"],
+      ["/", "/", "/home/ippei/git/gomiko/test/tmp/work"],
+      [".", " ", "/home/ippei/git/gomiko/test/tmp/work/a.txt"]
     ]
     assert_equal(corrects, results[3])
 
@@ -288,17 +287,17 @@ class TC_Gomiko < Test::Unit::TestCase
   end
 
   def test_graft
-    FileUtils.rm_rf(  'test/gomiko/graft')
-    FileUtils.mkdir_p('test/gomiko/graft/src/a/b/c')
-    FileUtils.mkdir_p('test/gomiko/graft/dst/a/b/c')
-    FileUtils.touch(  'test/gomiko/graft/src/a/b/c/d.txt')
+    FileUtils.rm_rf(  'test/tmp/graft')
+    FileUtils.mkdir_p('test/tmp/graft/src/a/b/c')
+    FileUtils.mkdir_p('test/tmp/graft/dst/a/b/c')
+    FileUtils.touch(  'test/tmp/graft/src/a/b/c/d.txt')
     #
-    @g00.graft('test/gomiko/graft/src',
+    @g00.graft('test/tmp/graft/src',
                'a',
-               dst_root: "test/gomiko/graft/dst",
+               dst_root: "test/tmp/graft/dst",
                verbose: false)
-    assert(FileTest.directory?('test/gomiko/graft/dst/a/b/c/'))
-    assert(FileTest.file?('test/gomiko/graft/dst/a/b/c/d.txt'))
+    assert(FileTest.directory?('test/tmp/graft/dst/a/b/c/'))
+    assert(FileTest.file?('test/tmp/graft/dst/a/b/c/d.txt'))
   end
 
   def test_mkdir_time
