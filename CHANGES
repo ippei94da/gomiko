@@ -1,5 +1,9 @@
 = Gomiko changelog
 
+* Bugfix a problem: enable to remove deadlink.
+* Bugfix a problem that 'gomiko ls' not show symlink deletion.
+* Avoid exception when 'gomiko rm .'
+
 == Version 0.0.0 [2017-06-29] released
 
 * initial release

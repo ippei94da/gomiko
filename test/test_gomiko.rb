@@ -72,12 +72,16 @@ class TC_Gomiko < Test::Unit::TestCase
     a_fullpath_dirname = File.dirname a_fullpath
     FileUtils.ln_s(b_relpath, a_relpath)
     #FileUtils.rm b_relpath
-    @g00.throw(paths: [], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
+    #@g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
+    @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: true)
     assert_false(FileTest.exist? a_relpath)
-    assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
-    assert_equal( Time.new(2017, 1, 23, 12, 34, 56), 
-           File.mtime("#{TRASHDIR}/20170123-123456"))
+    assert_false(FileTest.symlink? a_relpath)
+    pp "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
+    #sleep 60
+
+    t = "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
+    assert(FileTest.directory? t)
+    assert_false(FileTest.exist? a_relpath)
   end
 
   def test_empty1
@@ -289,16 +293,29 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal("#{WORKDIR}/a/ ...", results[2])
   end
 
-  def test_info5
+  def test_info5 # symlink
     FileUtils.mkdir_p "#{WORKDIR}/a/b"
-    @g00.throw(paths: ["#{WORKDIR}/a", "#{WORKDIR}/c"],
+    @g00.throw(paths: ["#{WORKDIR}/a"],
                time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
     FileUtils.mkdir_p "#{WORKDIR}/a/b"
     results = @g00.info("20170123-123456")
     #pp results
     assert_equal('20170123-123456', results[1])
-    assert_equal("#{WORKDIR}/a/b (exist in original path)", results[2])
+    assert_equal("#{WORKDIR}/a/b/ (only directory)", results[2])
+  end
+
+  def test_info6
+    FileUtils.touch("#{WORKDIR}/b")
+    FileUtils.ln_s("#{WORKDIR}/b", "#{WORKDIR}/a")
+    @g00.throw(paths: ["#{WORKDIR}/a"],
+               time: Time.new(2017, 1, 23, 12, 34, 56),
+               verbose: false)
+    FileUtils.touch("#{WORKDIR}/a")
+    results = @g00.info("20170123-123456")
+    #pp results
+    assert_equal('20170123-123456', results[1])
+    assert_equal("#{WORKDIR}/a (conflict)", results[2])
   end
 
   def test_graft
@@ -331,5 +348,26 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal("20170123-123456", @g00.path2id("20170123-123456"))
   end
 
+#  undef test_initialize
+#  undef test_throw1
+#  undef test_throw2
+#  undef test_throw3
+#  undef test_empty1
+#  undef test_empty2
+#  undef test_empty3 #mtime
+#  undef test_empty4 #mtime
+#  undef test_undo1
+#  undef test_undo2
+#  undef test_list1
+#  undef test_list2
+#  undef test_info1
+#  undef test_info2
+#  undef test_info3
+#  undef test_info4
+#  #undef test_info5
+#  undef test_info6
+#  undef test_graft
+#  undef test_mkdir_time
+#  undef test_path2id
 end
 

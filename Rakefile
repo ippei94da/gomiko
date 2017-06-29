@@ -16,6 +16,8 @@ Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
   gem.name = "gomiko"
   gem.homepage = "http://github.com/ippei94da/gomiko"
+  #gem.homepage = "http://www.q-eng.imat.eng.osaka-cu.ac.jp/~ippei/html/gomiko/index.html"
+
   gem.license = "MIT"
   gem.summary = %Q{Trashbox with command line interface}
   gem.description = %Q{
