@@ -17,7 +17,7 @@ Jeweler::Tasks.new do |gem|
   gem.name = "gomiko"
   gem.homepage = "http://github.com/ippei94da/gomiko"
   gem.license = "MIT"
-  gem.summary = %Q{Trashbox in UNIX systems}
+  gem.summary = %Q{Trashbox with command line interface}
   gem.description = %Q{
     This Gem provides functionality similar to the Trash box in Windows OS.
     The name 'gomiko' was originated from Japanese "gomibako".
