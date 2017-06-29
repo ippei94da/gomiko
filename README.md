@@ -1,13 +1,6 @@
-% Gomiko
-% Ippei Kishida
-% Last-modified:2017/06/29 11:08:02.
-<!-- vim:syntax=markdown
-<u> ■■■■ HERE ■■■■ </u>
+<!-- vim:syntax=markdown -->
 
-TODO 用語統一
--->
-
-(→ [Japanese version](index-ja.html))
+(→ [Japanese version](http://www.q-eng.imat.eng.osaka-cu.ac.jp/~ippei/html/gomiko/index-ja.html))
 
 # Overview
 
