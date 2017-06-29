@@ -45,8 +45,6 @@ class TC_Gomiko < Test::Unit::TestCase
     assert_equal( Time.new(2017, 1, 23, 12, 34, 56), 
            File.mtime("#{TRASHDIR}/20170123-123456"))
 
-
-
     # remove directory
     setup
     a_relpath = 'test/tmp/b/a.txt'
