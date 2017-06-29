@@ -32,7 +32,7 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(FileTest.directory? TRASHDIR)
   end
 
-  def test_throw
+  def test_throw1
     # remove file
     a_relpath = 'test/tmp/a.txt'
     a_fullpath = File.expand_path 'test/a.txt'
@@ -44,7 +44,9 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
     assert_equal( Time.new(2017, 1, 23, 12, 34, 56), 
            File.mtime("#{TRASHDIR}/20170123-123456"))
+  end
 
+  def test_throw2
     # remove directory
     setup
     a_relpath = 'test/tmp/b/a.txt'
@@ -56,12 +58,25 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
     assert_false(FileTest.exist? a_relpath)
     assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
-
     @g00.throw(paths: [a_relpath, 'not_exist'],
                time: Time.new(2017, 1, 23, 12, 34, 56),
                verbose: false)
     assert_false(FileTest.exist? (a_relpath))
   end
+
+  #def test_throw3
+  #  # remove deadlink
+  #  a_relpath = 'test/tmp/a.txt'
+  #  a_fullpath = File.expand_path 'test/a.txt'
+  #  a_fullpath_dirname = File.dirname a_fullpath
+  #  FileUtils.ln_s( 'tmp/not_exist', a_relpath)
+  #  @g00.throw(paths: [], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
+  #  assert(FileTest.directory? "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}")
+  #  assert_false(FileTest.exist? a_relpath)
+  #  assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
+  #  assert_equal( Time.new(2017, 1, 23, 12, 34, 56), 
+  #         File.mtime("#{TRASHDIR}/20170123-123456"))
+  #end
 
   def test_empty1
     a_relpath = 'test/tmp/a.txt'
