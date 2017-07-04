@@ -132,14 +132,11 @@ class Gomiko
 
     #pp flag_include_file
     unless flag_include_file
-      pp 'a'
       additions << 'only directory'
       candidates << trash_paths[-1]
     end
 
     ## if no candidate, last file is adopted.
-    #pp candidates
-    #pp trash_paths
     if trash_paths.empty?
       results << '(empty)'
       results << []
@@ -187,8 +184,6 @@ class Gomiko
     elsif FileTest.exist? (dst_path)
       puts "normal file already exist: #{dst_path}" if verbose
     else
-      #pp src_root + path
-      #pp dst_path
       FileUtils.mv(src_root + path, dst_path, noop: false, verbose: verbose )
     end
     return
@@ -205,7 +200,6 @@ class Gomiko
         #self.ls
         try_name = @trashdir + "#{time_str}"
         try_name += "-#{i}" if 1 <= i
-        #pp try_name
         FileUtils.mkdir(try_name)
         dirname = try_name
       rescue Errno::EEXIST
