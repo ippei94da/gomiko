@@ -149,11 +149,13 @@ class Gomiko
         tmp
       }
       results << candidates[0]
+      #pp results
 
       ## output '...' when multiple.
       candidates = candidates.select{|pa| ! pa.include? candidates[0]}
       results[-1] += ' ...' unless candidates.empty?
       #results[2] += ' (conflict)' if flag_conflict
+      #pp results
       results[2] += ' (' + additions.join(',') + ')' unless additions.empty?
       results << results_long
     end
