@@ -5,6 +5,7 @@ require 'fileutils'
 require 'pathname'
 require 'tefil'
 require 'find'
+require 'yaml'
 
 #
 #
@@ -33,7 +34,6 @@ class Gomiko
   def throw(paths: , time: Time.new, verbose: true)
     paths = paths.select do |path|
       flag = FileTest.symlink?(path) || FileTest.exist?(path) # for deadlink
-      #flag = FileTest.exist?(path) # for deadlink
       unless flag
         if verbose
           puts "gomiko rm: cannot remove '#{path}': No such file or directory"
