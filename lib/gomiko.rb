@@ -67,9 +67,8 @@ class Gomiko
     if ids.empty?
       tgts = (dir_list + yaml_list.map{|v| v.sub(".yaml", "")}).sort.uniq
     else
-      tgts = ids.map {|v|  path2id(v)}
+      tgts = ids.map {|v|  path2id(v.sub(".yaml", ""))}
     end
-    #pp tgts; exit
     tgts = tgts.select { |v|
       begin
         str2datetime(v) - time < 86400 * mtime
