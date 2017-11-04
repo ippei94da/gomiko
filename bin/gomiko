@@ -15,15 +15,11 @@ class MyCommand < Thor
   #  type: :boolean,
   #  default: false
   def rm(* paths)
-    #paths.select do |path|
-    #  File.exist? path
-    #end
     Gomiko.new.throw(paths: paths)
   end
 
   desc :empty, 'Remove files in trash directory'
   option "mtime",
-    #type: :numeric,
     type: :string,
     desc: 'Data was last modified n*24 hours ago.',
     default: '0'
@@ -39,12 +35,12 @@ class MyCommand < Thor
   def undo(* dirs)
     g = Gomiko.new
 
-    if Dir.glob("#{@trashdir}/*").empty?
-      puts "Nothing to undo in #{@trashdir}"
+    if g.dir_list.empty?
+      puts "Nothing to undo in #{g.trashdir}"
       exit
     end
 
-    dirs = [g.list[-1]] if dirs.empty?
+    dirs = [g.dir_list[-1]] if dirs.empty?
     dirs.each do |dir|
       begin
         g.undo(dir)
@@ -52,29 +48,32 @@ class MyCommand < Thor
         puts "Permission denined: #{dir}"
       end
     end
-
   end
 
   ## list
   desc :ls, 'Show trash directory'
   option "long", type: :boolean,
+    desc: "use a long format",
     default: false,
     aliases: 'l'
+  option "all", type: :boolean,
+    desc: "show all history including after undo",
+    default: false,
+    aliases: 'a'
   def ls(* ids)
     g = Gomiko.new
-    if g.list.empty?
+    if g.dir_list.empty?
       puts "Nothing in ~/.trash"
       exit
     end
-    ids = g.list if ids.empty?
+    ids = g.dir_list if ids.empty?
     if options[:long]
       ids.each do |id|
         puts '-' * 60
         results = g.info(id)
         printf("%-10s: %s\n", 'size', results[0])
         printf("%-10s: %s\n", 'id', results[1])
-        printf("%-10s: %s\n", 'guess path', results[2])
-        #pp results[3]
+        printf("%-10s: %s\n", 'path(s)', results[2])
         puts '+----- filetype in trash'
         puts '| +--- filetype in original path'
         puts '| | +- original path'
@@ -88,6 +87,13 @@ class MyCommand < Thor
         g.info(id)[0..2]
       end
       Tefil::ColumnFormer.new.form(results)
+    end
+    if options[:all]
+      g.yaml_list.each do |file|
+        id = file.sub(".yaml", "")
+        next if g.dir_list.include?(id)
+        puts "undo #{id}"
+      end
     end
   end
 end

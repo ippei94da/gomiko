@@ -14,7 +14,6 @@ class TC_Gomiko < Test::Unit::TestCase
   WORKDIR  = "#{TMPDIR}/work"
   TRASHDIR = "#{TMPDIR}/trash"
 
-  #pp WORKDIR; exit
   def setup
     FileUtils.rm_rf TMPDIR
     FileUtils.mkdir_p WORKDIR
@@ -44,6 +43,12 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(FileTest.exist? ("#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"))
     assert_equal( Time.new(2017, 1, 23, 12, 34, 56), 
            File.mtime("#{TRASHDIR}/20170123-123456"))
+    assert(FileTest.exist? "#{TRASHDIR}/20170123-123456.yaml")
+    yaml = YAML.load_file "#{TRASHDIR}/20170123-123456.yaml"
+    assert_equal(
+      {"pwd"=>"/home/ippei/git/gomiko", "paths"=>["test/tmp/a.txt"]},
+      yaml
+    )
   end
 
   def test_throw2
@@ -71,13 +76,9 @@ class TC_Gomiko < Test::Unit::TestCase
     a_fullpath = File.expand_path 'test/a.txt'
     a_fullpath_dirname = File.dirname a_fullpath
     FileUtils.ln_s(b_relpath, a_relpath)
-    #FileUtils.rm b_relpath
-    #@g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: false)
-    @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: true)
+    @g00.throw(paths: [a_relpath], time: Time.new(2017, 1, 23, 12, 34, 56), verbose: true, io: StringIO.new)
     assert_false(FileTest.exist? a_relpath)
     assert_false(FileTest.symlink? a_relpath)
-    pp "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
-    #sleep 60
 
     t = "#{TRASHDIR}/20170123-123456#{a_fullpath_dirname}"
     assert(FileTest.directory? t)
@@ -107,7 +108,9 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(File.exist? "#{TRASHDIR}/20170123-123457#{b_fullpath}")
     @g00.empty(ids: ['20170123-123456'], verbose: false)
     assert_false(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
+    assert_false(File.exist? "#{TRASHDIR}/20170123-123456.yaml")
     assert      (File.exist? "#{TRASHDIR}/20170123-123457#{b_fullpath}")
+    assert      (File.exist? "#{TRASHDIR}/20170123-123457.yaml")
   end
 
   def test_empty3 #mtime
@@ -122,11 +125,13 @@ class TC_Gomiko < Test::Unit::TestCase
     assert(File.exist? "#{TRASHDIR}/20170615-000000#{a_fullpath}")
     @g00.empty(mtime: -10,
                time: Time.new(2017, 6, 24, 23, 59, 59),
-               verbose: false)
+               verbose: false,
+               io: StringIO.new)
     assert(File.exist? "#{TRASHDIR}/20170615-000000#{a_fullpath}")
     @g00.empty(mtime: -10,
                time: Time.new(2017, 6, 25, 00, 00, 00),
-               verbose: false)
+               verbose: false,
+               io: StringIO.new)
     assert_false(File.exist? "#{TRASHDIR}/20170123-123456#{a_fullpath}")
   end
 
@@ -165,7 +170,8 @@ class TC_Gomiko < Test::Unit::TestCase
     @g00.empty(ids: %w(20170615-000000 20170715-000000),
                mtime: -3,
                time: Time.new(2017, 7, 16, 01, 00, 00),
-               verbose: false)
+               verbose: false,
+               io: File::NULL)
     assert_false(File.exist? "#{TRASHDIR}/20170615-000000#{a_fullpath}")
     assert      (File.exist? "#{TRASHDIR}/20170615-120000#{b_fullpath}")
     assert      (File.exist? "#{TRASHDIR}/20170715-000000#{c_fullpath}")
@@ -208,8 +214,9 @@ class TC_Gomiko < Test::Unit::TestCase
     assert      (File.exist? "#{WORKDIR}/a/b/c.txt")
   end
 
-  # ls, list
-  def test_list1
+
+  # ls, dir_list
+  def test_dir_list1
     a_relpath = 'test/tmp/a.txt'
     FileUtils.touch a_relpath
     @g00.throw(paths: [a_relpath],
@@ -220,14 +227,12 @@ class TC_Gomiko < Test::Unit::TestCase
     @g00.throw(paths: [a_relpath],
                time: Time.new(2017, 1, 23, 12, 34, 57),
                verbose: false)
-    corrects = ["20170123-123456", "20170123-123457" ]
-    assert_equal(corrects, @g00.list)
+    corrects = [ "20170123-123456", "20170123-123457" ]
+    assert_equal(corrects, @g00.dir_list)
   end
 
-  def test_list2
+  def test_dir_list2
     FileUtils.mkdir_p @g00.trashdir + '20170628-000000'
-    #pp @g00.list
-    #assert_equal(corrects, @g00.list)
   end
 
   def test_info1
@@ -240,7 +245,6 @@ class TC_Gomiko < Test::Unit::TestCase
     results = @g00.info("20170123-123456")
     assert_equal('20170123-123456', results[1])
     assert_equal(path,              results[2])
-    #pp results[3]
     corrects = [
       ["/", "/", "/home"],
       ["/", "/", "/home/ippei"],
@@ -276,7 +280,7 @@ class TC_Gomiko < Test::Unit::TestCase
     #size is dependent on system
     results = @g00.info("20170123-123456")
     assert_equal('20170123-123456', results[1])
-    assert_equal("#{WORKDIR}/a/", results[2])
+    assert_equal("#{WORKDIR}/a", results[2])
   end
 
   def test_info4
@@ -290,7 +294,7 @@ class TC_Gomiko < Test::Unit::TestCase
     #size is dependent on system
     results = @g00.info("20170123-123456")
     assert_equal('20170123-123456', results[1])
-    assert_equal("#{WORKDIR}/a/ ...", results[2])
+    assert_equal("#{WORKDIR}/a ...", results[2])
   end
 
   def test_info5 # symlink
@@ -300,9 +304,8 @@ class TC_Gomiko < Test::Unit::TestCase
                verbose: false)
     FileUtils.mkdir_p "#{WORKDIR}/a/b"
     results = @g00.info("20170123-123456")
-    #pp results
     assert_equal('20170123-123456', results[1])
-    assert_equal("#{WORKDIR}/a/b/ (only directory)", results[2])
+    assert_equal("#{WORKDIR}/a (only directory)", results[2])
   end
 
   def test_info6
@@ -313,7 +316,6 @@ class TC_Gomiko < Test::Unit::TestCase
                verbose: false)
     FileUtils.touch("#{WORKDIR}/a")
     results = @g00.info("20170123-123456")
-    #pp results
     assert_equal('20170123-123456', results[1])
     assert_equal("#{WORKDIR}/a (conflict)", results[2])
   end
