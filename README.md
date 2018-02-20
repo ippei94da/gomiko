@@ -1,5 +1,3 @@
-<!-- vim:syntax=markdown -->
-
 (→ [Japanese version](http://www.q-eng.imat.eng.osaka-cu.ac.jp/~ippei/html/gomiko/index-ja.html))
 
 # Overview
