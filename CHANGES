@@ -1,5 +1,9 @@
 = Gomiko changelog
 
+== Version 0.0.2 [2018-02-20] released
+
+* small bugfix
+
 == Version 0.0.1 [2017-06-29] released
 
 * Bugfix a problem: enable to remove deadlink.
